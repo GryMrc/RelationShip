@@ -11,9 +11,10 @@ namespace RelationshipService.Domain.Entities
         public string Latitude { get; set; }
         public string Longitude { get; set; }
         public DateTime DateOfBirth { get; set; }
-        public byte Height { get; set; }
+        public byte? Height { get; set; }
         public byte? Weight { get; set; }
         public string ZodiacSign { get; set; }
+        public string RisingZodiacSign { get; set; }
         public GenderEnum InterestedInGender { get; set; }
         public List<QuestionAnswer> QuestionAnswers { get; set; }
         public List<ProfilePhoto> ProfilePhotos { get; set; }
