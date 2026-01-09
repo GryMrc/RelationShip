@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\MatcherService.Application\MatcherService.Application.csproj" />
+    <ProjectReference Include="..\RelationshipService.Application\RelationshipService.Application.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
