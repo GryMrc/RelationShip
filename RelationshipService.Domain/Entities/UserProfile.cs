@@ -1,13 +1,15 @@
+using RelationshipService.Domain.Base;
+using RelationshipService.Domain.Enums;
+
 namespace RelationshipService.Domain.Entities
 {
-    public class Profile
+    public class UserProfile : Entity<int>
     {
-        public int Id { get; set; }
         public int UserId { get; set; }
         public string Name { get; set; }
         public string Bio { get; set; }
         public List<Hobby> Hobbies { get; set; }
-        public GenderEnum Gender { get; set; }
+        public Gender Gender { get; set; }
         public string Latitude { get; set; }
         public string Longitude { get; set; }
         public DateTime DateOfBirth { get; set; }
@@ -15,10 +17,9 @@ namespace RelationshipService.Domain.Entities
         public byte? Weight { get; set; }
         public string ZodiacSign { get; set; }
         public string RisingZodiacSign { get; set; }
-        public GenderEnum InterestedInGender { get; set; }
-        public List<QuestionAnswer> QuestionAnswers { get; set; }
-        public List<ProfilePhoto> ProfilePhotos { get; set; }
-
+        public Gender InterestedInGender { get; set; }
+        public List<UserProfileAnswer> UserProfileAnswers { get; set; }
+        public List<UserProfilePhoto> ProfilePhotos { get; set; }
         public sbyte MaxDistancePreference { get; set; }
         public byte MinAgePreference { get; set; }
         public byte MaxAgePreference { get; set; }

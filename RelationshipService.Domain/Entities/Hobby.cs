@@ -1,8 +1,8 @@
-namespace RelationshipService.Domain.Entities
+using RelationshipService.Domain.Base;
+
+namespace RelationshipService.Domain.Entities;
+
+public class Hobby : Entity<int>
 {
-    public class Hobby
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-    }
+    public string Name { get; set; }
 }

@@ -1,16 +1,12 @@
-namespace RelationshipService.Domain.Entities;
-public class QuestionAnswer
-{
-    public int Id { get; private set; }
+using RelationshipService.Domain.Base;
 
+namespace RelationshipService.Domain.Entities;
+public class QuestionAnswer : Entity<int>
+{
     public int QuestionId { get; private set; }
+    public Question Question { get; set; }
 
     public string AnswerText { get; private set; }
 
-    public QuestionAnswer(int id, int questionId, string answerText)
-    {
-        Id = id;
-        QuestionId = questionId;
-        AnswerText = answerText;
-    }
+    public List<UserProfileAnswer> UserProfileAnswers { get; set; }
 }
