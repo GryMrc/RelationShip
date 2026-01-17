@@ -1,0 +1,13 @@
+﻿using RelationshipService.Application.Models.UserProfile.Requests;
+using RelationshipService.Application.Models.UserProfile.Responses;
+
+namespace RelationshipService.Application.Services.User;
+
+public interface IUserProfileService
+{
+    Task<UserProfileResponse> GetByUserIdAsync(int userId);
+    Task<List<UserProfileResponse>> GetAllAsync();
+    Task<int> CreateAsync(CreateUserProfileRequest request);
+    Task UpdateAsync(UpdateUserProfileRequest request);
+    Task DeleteAsync(int userId);
+}

@@ -17,18 +17,14 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
         builder.Property(x => x.Name).HasColumnName("name").HasMaxLength(200).IsRequired();
         builder.Property(x => x.Bio).HasColumnName("bio").HasMaxLength(1000);
         builder.Property(x => x.Gender).HasColumnName("gender").IsRequired();
-        builder.Property(x => x.Latitude).HasColumnName("latitude").HasMaxLength(50);
-        builder.Property(x => x.Longitude).HasColumnName("longitude").HasMaxLength(50);
         builder.Property(x => x.DateOfBirth).HasColumnName("date_of_birth").IsRequired();
         builder.Property(x => x.Height).HasColumnName("height");
         builder.Property(x => x.Weight).HasColumnName("weight");
         builder.Property(x => x.ZodiacSign).HasColumnName("zodiac_sign").HasMaxLength(50);
         builder.Property(x => x.RisingZodiacSign).HasColumnName("rising_zodiac_sign").HasMaxLength(50);
-        builder.Property(x => x.InterestedInGender).HasColumnName("interested_in_gender").IsRequired();
-        
-        builder.Property(x => x.MaxDistancePreference).HasColumnName("max_distance_preference");
-        builder.Property(x => x.MinAgePreference).HasColumnName("min_age_preference");
-        builder.Property(x => x.MaxAgePreference).HasColumnName("max_age_preference");
+
+        // Relationships are primarily configured in UserProfileLocationConfiguration and UserProfilePreferencesConfiguration
+        // for better clarity in 1:1 bidirectional mapping.
 
         // Relationships
         builder.HasMany(x => x.ProfilePhotos)
