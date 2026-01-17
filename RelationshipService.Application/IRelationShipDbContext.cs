@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RelationshipService.Domain.Entities;
 
-namespace RelationshipService.Application.Interfaces;
+namespace RelationshipService.Application;
 
 public interface IRelationShipDbContext
 {

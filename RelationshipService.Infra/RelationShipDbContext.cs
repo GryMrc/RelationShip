@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using RelationshipService.Application.Interfaces;
+using RelationshipService.Application;
 using RelationshipService.Domain.Base;
 using RelationshipService.Domain.Entities;
 
