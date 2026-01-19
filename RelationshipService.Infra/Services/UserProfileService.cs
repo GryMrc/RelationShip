@@ -15,7 +15,7 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
         var profile = await context.UserProfiles
             .AsNoTracking()
             .Include(x => x.Preferences)
-            .FirstOrDefaultAsync(x => x.UserId == userId && !x.IsDeleted);
+            .FirstOrDefaultAsync(x => x.UserId == userId);
 
         if (profile == null) return null;
 
@@ -27,7 +27,6 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
         var profiles = await context.UserProfiles
             .AsNoTracking()
             .Include(x => x.Preferences)
-            .Where(x => !x.IsDeleted)
             .ToListAsync();
 
         return profiles.Select(MapToResponse).ToList();
@@ -35,6 +34,12 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
 
     public async Task<int> CreateAsync(CreateUserProfileRequest request)
     {
+        var user = await context.UserProfiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.UserId == request.UserId);
+
+        if (user != null) throw new Exception("Profile already exists");
+
         var profile = new UserProfile
         {
             UserId = request.UserId,
@@ -58,14 +63,11 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
     public async Task UpdateAsync(UpdateUserProfileRequest request)
     {
         var profile = await context.UserProfiles
-            .FirstOrDefaultAsync(x => x.UserId == request.UserId && !x.IsDeleted);
+            .FirstOrDefaultAsync(x => x.UserId == request.UserId);
 
         if (profile == null) throw new Exception("Profile not found");
 
-        profile.Name = request.Name;
         profile.Bio = request.Bio;
-        profile.Gender = request.Gender;
-        profile.DateOfBirth = request.DateOfBirth;
         profile.Height = request.Height;
         profile.Weight = request.Weight;
         profile.ZodiacSign = request.ZodiacSign;
@@ -141,11 +143,7 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
             Weight = profile.Weight,
             ZodiacSign = profile.ZodiacSign,
             RisingZodiacSign = profile.RisingZodiacSign,
-            IsVerified = profile.IsVerified,
-            InterestedInGender = profile.Preferences?.InterestedInGender ?? default,
-            MaxDistancePreference = profile.Preferences?.MaxDistancePreference ?? 0,
-            MinAgePreference = profile.Preferences?.MinAgePreference ?? 0,
-            MaxAgePreference = profile.Preferences?.MaxAgePreference ?? 0
+            IsVerified = profile.IsVerified
         };
     }
 }

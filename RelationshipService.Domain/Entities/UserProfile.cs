@@ -8,7 +8,7 @@ namespace RelationshipService.Domain.Entities
     {
         public int UserId { get; set; }
         public string Name { get; set; }
-        public string Bio { get; set; }
+        public string? Bio { get; set; }
         public List<Hobby> Hobbies { get; set; }
         public Gender Gender { get; set; }
         public DateTime DateOfBirth { get; set; }

@@ -2,6 +2,7 @@
 using RelationshipService.Application;
 using RelationshipService.Domain.Base;
 using RelationshipService.Domain.Entities;
+using System.Reflection;
 
 namespace RelationshipService.Infra;
 
@@ -22,8 +23,24 @@ public class RelationShipDbContext(DbContextOptions<RelationShipDbContext> optio
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(RelationShipDbContext).Assembly);
-        
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (typeof(IEntity).IsAssignableFrom(entityType.ClrType))
+            {
+                var method = typeof(RelationShipDbContext)
+                    .GetMethod(nameof(SetGlobalQueryFilter), BindingFlags.NonPublic | BindingFlags.Static)
+                    ?.MakeGenericMethod(entityType.ClrType);
+                method?.Invoke(null, [modelBuilder]);
+            }
+        }
+
         base.OnModelCreating(modelBuilder);
+    }
+
+    private static void SetGlobalQueryFilter<T>(ModelBuilder modelBuilder) where T : class, IEntity
+    {
+        modelBuilder.Entity<T>().HasQueryFilter(e => !e.IsDeleted);
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
