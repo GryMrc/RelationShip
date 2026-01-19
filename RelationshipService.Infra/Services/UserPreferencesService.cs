@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using RelationshipService.Application;
 using RelationshipService.Application.Models.UserPrefences.Requests;
-using RelationshipService.Application.Services.User;
+using RelationshipService.Application.ServiceContracts;
 using RelationshipService.Domain.Entities;
 
-namespace RelationshipService.Infra.Services.User;
+namespace RelationshipService.Infra.Services;
 
 public class UserPreferencesService(IRelationShipDbContext context) : IUserPreferencesService
 {

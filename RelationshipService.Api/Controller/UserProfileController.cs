@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RelationshipService.Application.Models.UserProfile.Requests;
-using RelationshipService.Application.Services.User;
+using RelationshipService.Application.ServiceContracts;
 
-namespace RelationshipService.Api.Controller.Profile;
+namespace RelationshipService.Api.Controller;
 
 public class UserProfileController(IUserProfileService userProfileService) : BaseController
 {

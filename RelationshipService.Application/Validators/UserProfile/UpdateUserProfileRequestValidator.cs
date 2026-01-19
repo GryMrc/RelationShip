@@ -1,7 +1,7 @@
 using FluentValidation;
 using RelationshipService.Application.Models.UserProfile.Requests;
 
-namespace RelationshipService.Application.Validators.Profile;
+namespace RelationshipService.Application.Validators.UserProfile;
 
 public class UpdateUserProfileRequestValidator : AbstractValidator<UpdateUserProfileRequest>
 {

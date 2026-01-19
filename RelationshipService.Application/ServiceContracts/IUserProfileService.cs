@@ -1,7 +1,7 @@
 ﻿using RelationshipService.Application.Models.UserProfile.Requests;
 using RelationshipService.Application.Models.UserProfile.Responses;
 
-namespace RelationshipService.Application.Services.User;
+namespace RelationshipService.Application.ServiceContracts;
 
 public interface IUserProfileService
 {

@@ -1,5 +1,6 @@
 using RelationshipService.Domain.Base;
 using RelationshipService.Domain.Enums;
+using NetTopologySuite.Geometries;
 
 namespace RelationshipService.Domain.Entities
 {
@@ -13,10 +14,11 @@ namespace RelationshipService.Domain.Entities
         public DateTime DateOfBirth { get; set; }
         public byte? Height { get; set; }
         public byte? Weight { get; set; }
-        public string ZodiacSign { get; set; }
-        public string RisingZodiacSign { get; set; }
+        public Point Location { get; set; }
+        public ZodiacSign? ZodiacSign { get; set; }
+        public ZodiacSign? RisingZodiacSign { get; set; }
+        public bool IsVerified { get; set; }
 
-        public UserLocation Location { get; set; }
         public UserPreferences Preferences { get; set; }
 
         public List<UserProfileAnswer> UserProfileAnswers { get; set; }

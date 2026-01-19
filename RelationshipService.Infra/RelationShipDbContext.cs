@@ -10,7 +10,6 @@ public class RelationShipDbContext(DbContextOptions<RelationShipDbContext> optio
     public DbSet<UserProfile> UserProfiles { get; set; }
     public DbSet<UserProfilePhoto> UserProfilePhotos { get; set; }
     public DbSet<UserPreferences> UserPreferences { get; set; }
-    public DbSet<UserLocation> UserLocations { get; set; }
     public DbSet<UserLocationHistory> UserLocationHistories { get; set; }
     public DbSet<Match> Matches { get; set; }
     public DbSet<Swipe> Swipes { get; set; }

@@ -13,6 +13,8 @@ public abstract class UserProfileRequestBase
     public DateTime DateOfBirth { get; set; }
     public byte? Height { get; set; }
     public byte? Weight { get; set; }
-    public string ZodiacSign { get; set; }
-    public string RisingZodiacSign { get; set; }
+    public ZodiacSign? ZodiacSign { get; set; }
+    public ZodiacSign? RisingZodiacSign { get; set; }
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
 }

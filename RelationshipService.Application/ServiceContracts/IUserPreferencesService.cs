@@ -1,6 +1,6 @@
 using RelationshipService.Application.Models.UserPrefences.Requests;
 
-namespace RelationshipService.Application.Services.User;
+namespace RelationshipService.Application.ServiceContracts;
 
 public interface IUserPreferencesService
 {

@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using RelationshipService.Application;
-using RelationshipService.Application.Services.User;
+using RelationshipService.Application.ServiceContracts;
 using RelationshipService.Infra;
-using RelationshipService.Infra.Services.User;
+using RelationshipService.Infra.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +16,7 @@ builder.Services.AddDbContext<RelationShipDbContext>(options =>
       npgsql =>
       {
           npgsql.MigrationsAssembly(typeof(RelationShipDbContext).Assembly.FullName);
+          npgsql.UseNetTopologySuite();
       }
     ));
 
@@ -23,7 +24,6 @@ builder.Services.AddScoped<IRelationShipDbContext>(provider =>
     provider.GetRequiredService<RelationShipDbContext>());
 
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
-builder.Services.AddScoped<IUserLocationService, UserLocationService>();
 builder.Services.AddScoped<IUserPreferencesService, UserPreferencesService>();
 
 var app = builder.Build();

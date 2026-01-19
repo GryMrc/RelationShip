@@ -2,17 +2,17 @@
 using RelationshipService.Application;
 using RelationshipService.Application.Models.UserProfile.Requests;
 using RelationshipService.Application.Models.UserProfile.Responses;
-using RelationshipService.Application.Services.User;
+using RelationshipService.Application.ServiceContracts;
 using RelationshipService.Domain.Entities;
+using NetTopologySuite.Geometries;
 
-namespace RelationshipService.Infra.Services.User;
+namespace RelationshipService.Infra.Services;
 
 public class UserProfileService(IRelationShipDbContext context) : IUserProfileService
 {
     public async Task<UserProfileResponse> GetByUserIdAsync(int userId)
     {
         var profile = await context.UserProfiles
-            .Include(x => x.Location)
             .Include(x => x.Preferences)
             .FirstOrDefaultAsync(x => x.UserId == userId && !x.IsDeleted);
 
@@ -24,7 +24,6 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
     public async Task<List<UserProfileResponse>> GetAllAsync()
     {
         var profiles = await context.UserProfiles
-            .Include(x => x.Location)
             .Include(x => x.Preferences)
             .Where(x => !x.IsDeleted)
             .ToListAsync();
@@ -44,7 +43,8 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
             Height = request.Height,
             Weight = request.Weight,
             ZodiacSign = request.ZodiacSign,
-            RisingZodiacSign = request.RisingZodiacSign
+            RisingZodiacSign = request.RisingZodiacSign,
+            Location = new Point(request.Longitude, request.Latitude) { SRID = 4326 }
         };
 
         context.UserProfiles.Add(profile);
@@ -68,6 +68,7 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
         profile.Weight = request.Weight;
         profile.ZodiacSign = request.ZodiacSign;
         profile.RisingZodiacSign = request.RisingZodiacSign;
+        profile.Location = new Point(request.Longitude, request.Latitude) { SRID = 4326 };
 
         await context.SaveChangesAsync();
     }
@@ -90,13 +91,14 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
             Name = profile.Name,
             Bio = profile.Bio,
             Gender = profile.Gender,
-            Latitude = profile.Location?.Latitude,
-            Longitude = profile.Location?.Longitude,
+            Latitude = profile.Location.Y,
+            Longitude = profile.Location.X,
             DateOfBirth = profile.DateOfBirth,
             Height = profile.Height,
             Weight = profile.Weight,
             ZodiacSign = profile.ZodiacSign,
             RisingZodiacSign = profile.RisingZodiacSign,
+            IsVerified = profile.IsVerified,
             InterestedInGender = profile.Preferences?.InterestedInGender ?? default,
             MaxDistancePreference = profile.Preferences?.MaxDistancePreference ?? 0,
             MinAgePreference = profile.Preferences?.MinAgePreference ?? 0,

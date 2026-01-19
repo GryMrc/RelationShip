@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using RelationshipService.Application.Services.User;
+using RelationshipService.Application.ServiceContracts;
 using RelationshipService.Application.Models.UserPrefences.Requests;
 
-namespace RelationshipService.Api.Controller.User;
+namespace RelationshipService.Api.Controller;
 
 public class UserPreferencesController(IUserPreferencesService userPreferencesService) : BaseController
 {
