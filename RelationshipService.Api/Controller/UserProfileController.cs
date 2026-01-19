@@ -50,4 +50,11 @@ public class UserProfileController(IUserProfileService userProfileService) : Bas
         await userProfileService.DeleteAsync(UserId);
         return NoContent();
     }
+
+    [HttpGet("discovery")]
+    public async Task<IActionResult> GetDiscovery()
+    {
+        var profiles = await userProfileService.GetDiscoveryProfilesAsync(UserId);
+        return Ok(profiles);
+    }
 }

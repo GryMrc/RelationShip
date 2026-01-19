@@ -10,4 +10,5 @@ public interface IUserProfileService
     Task<int> CreateAsync(CreateUserProfileRequest request);
     Task UpdateAsync(UpdateUserProfileRequest request);
     Task DeleteAsync(int userId);
+    Task<List<UserProfileResponse>> GetDiscoveryProfilesAsync(int userId);
 }

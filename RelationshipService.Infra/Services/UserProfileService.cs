@@ -13,6 +13,7 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
     public async Task<UserProfileResponse> GetByUserIdAsync(int userId)
     {
         var profile = await context.UserProfiles
+            .AsNoTracking()
             .Include(x => x.Preferences)
             .FirstOrDefaultAsync(x => x.UserId == userId && !x.IsDeleted);
 
@@ -24,6 +25,7 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
     public async Task<List<UserProfileResponse>> GetAllAsync()
     {
         var profiles = await context.UserProfiles
+            .AsNoTracking()
             .Include(x => x.Preferences)
             .Where(x => !x.IsDeleted)
             .ToListAsync();
@@ -82,6 +84,47 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
 
         context.UserProfiles.Remove(profile);
         await context.SaveChangesAsync();
+    }
+
+    public async Task<List<UserProfileResponse>> GetDiscoveryProfilesAsync(int userId)
+    {
+        // 1. Mevcut kullanıcının profilini ve tercihlerini al
+        var currentUser = await context.UserProfiles
+            .AsNoTracking()
+            .Include(x => x.Preferences)
+            .FirstOrDefaultAsync(x => x.UserId == userId && !x.IsDeleted);
+
+        if (currentUser == null || currentUser.Preferences == null)
+            return new List<UserProfileResponse>();
+
+        // 2. Daha önce etkileşim kurduğu (swipe) kullanıcıları al (Bunları keşiften elliyoruz)
+        var swipedUserIds = await context.Swipes
+            .Where(s => s.SwiperUserId == userId)
+            .Select(s => s.SwipedUserId)
+            .ToListAsync();
+
+        // 3. Yaş filtresi için tarih sınırlarını belirle
+        var today = DateTime.UtcNow;
+        var minBirthDate = today.AddYears(-currentUser.Preferences.MaxAgePreference);
+        var maxBirthDate = today.AddYears(-currentUser.Preferences.MinAgePreference);
+
+        // 4. Mesafe filtresi (KM -> Derece yaklaşık dönüşümü)
+        // 1 derece yaklaşık 111.1km'dir. Derece üzerinden sorgu atmak GIST indeksini verimli kullandırır.
+        double distanceLimitDegrees = currentUser.Preferences.MaxDistancePreference / 111.1;
+
+        // 5. Ana Keşif Sorgusu (Discovery Query)
+        var profiles = await context.UserProfiles
+            .AsNoTracking()
+            .Where(p => p.UserId != userId && !p.IsDeleted)
+            .Where(p => !swipedUserIds.Contains(p.UserId)) // Daha önce swipe edilmemişler
+            .Where(p => p.Gender == currentUser.Preferences.InterestedInGender) // Cinsiyet tercihi
+            .Where(p => p.DateOfBirth >= minBirthDate && p.DateOfBirth <= maxBirthDate) // Yaş tercihi
+            .Where(p => p.Location.Distance(currentUser.Location) <= distanceLimitDegrees) // Mesafe tercihi
+            .OrderBy(x => EF.Functions.Random()) // Rastgelelik ekleyerek her defasında farklı profiller getiriyoruz
+            .Take(20)
+            .ToListAsync();
+
+        return profiles.Select(MapToResponse).ToList();
     }
 
     private static UserProfileResponse MapToResponse(UserProfile profile)
