@@ -4,7 +4,7 @@ namespace RelationshipService.Domain.Entities;
 
 public class Question : Entity<int>
 {
-    public string Text { get; private set; }
+    public string Text { get; set; }
 
     public List<QuestionAnswer> QuestionAnswers { get; set; }
 
