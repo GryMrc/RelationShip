@@ -26,6 +26,7 @@ builder.Services.AddScoped<IRelationShipDbContext>(provider =>
 
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<IUserPreferencesService, UserPreferencesService>();
+builder.Services.AddScoped<IHobbyService, HobbyService>();
 
 var app = builder.Build();
 
