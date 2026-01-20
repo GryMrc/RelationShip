@@ -53,6 +53,13 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
 
         builder.HasMany(x => x.Hobbies)
             .WithMany()
-            .UsingEntity(j => j.ToTable("user_profile_hobbies"));
+            .UsingEntity<UserProfileHobby>(
+                j =>
+                {
+                    j.ToTable("user_profile_hobbies");
+                    j.HasKey(t => new { t.UserProfileId, t.HobbyId });
+                    j.Property(x => x.UserProfileId).HasColumnName("user_profile_id");
+                    j.Property(x => x.HobbyId).HasColumnName("hobby_id");
+                });
     }
 }

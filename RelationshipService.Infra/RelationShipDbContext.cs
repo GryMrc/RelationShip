@@ -28,6 +28,10 @@ public class RelationShipDbContext(DbContextOptions<RelationShipDbContext> optio
         {
             if (typeof(IEntity).IsAssignableFrom(entityType.ClrType))
             {
+                modelBuilder.Entity(entityType.ClrType).Property(nameof(IEntity.IsDeleted)).HasColumnName("is_deleted");
+                modelBuilder.Entity(entityType.ClrType).Property(nameof(IEntity.CreatedDate)).HasColumnName("created_date");
+                modelBuilder.Entity(entityType.ClrType).Property(nameof(IEntity.UpdatedDate)).HasColumnName("updated_date");
+
                 var method = typeof(RelationShipDbContext)
                     .GetMethod(nameof(SetGlobalQueryFilter), BindingFlags.NonPublic | BindingFlags.Static)
                     ?.MakeGenericMethod(entityType.ClrType);

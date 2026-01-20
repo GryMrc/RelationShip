@@ -3,6 +3,7 @@ using RelationshipService.Application;
 using RelationshipService.Application.ServiceContracts;
 using RelationshipService.Infra;
 using RelationshipService.Infra.Services;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +33,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
