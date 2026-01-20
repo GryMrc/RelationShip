@@ -1,12 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
-using RelationshipService.Application;
+using Microsoft.EntityFrameworkCore;
 using RelationshipService.Application.Models.UserProfile.Requests;
 using RelationshipService.Application.Models.UserProfile.Responses;
 using RelationshipService.Application.ServiceContracts;
 using RelationshipService.Domain.Entities;
 using NetTopologySuite.Geometries;
 
-namespace RelationshipService.Infra.Services;
+namespace RelationshipService.Application.Services;
 
 public class UserProfileService(IRelationShipDbContext context) : IUserProfileService
 {

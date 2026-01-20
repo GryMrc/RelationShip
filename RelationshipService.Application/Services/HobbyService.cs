@@ -1,11 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using RelationshipService.Application;
 using RelationshipService.Application.Models.Hobby.Requests;
 using RelationshipService.Application.Models.Hobby.Responses;
 using RelationshipService.Application.ServiceContracts;
 using RelationshipService.Domain.Entities;
 
-namespace RelationshipService.Infra.Services;
+namespace RelationshipService.Application.Services;
 
 public class HobbyService(IRelationShipDbContext context) : IHobbyService
 {
