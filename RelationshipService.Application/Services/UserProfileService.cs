@@ -4,6 +4,8 @@ using RelationshipService.Application.Models.UserProfile.Responses;
 using RelationshipService.Application.ServiceContracts;
 using RelationshipService.Domain.Entities;
 using NetTopologySuite.Geometries;
+using RelationshipService.Domain.Enums;
+using RelationshipService.Application.Models.Hobby.Responses;
 
 namespace RelationshipService.Application.Services;
 
@@ -14,6 +16,11 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
         var profile = await context.UserProfiles
             .AsNoTracking()
             .Include(x => x.Preferences)
+            .Include(x => x.Hobbies)
+            .Include(x => x.ProfilePhotos)
+            .Include(x => x.UserProfileAnswers)
+                .ThenInclude(x => x.QuestionAnswer)
+                    .ThenInclude(x => x.Question)
             .FirstOrDefaultAsync(x => x.UserId == userId);
 
         if (profile == null) return null;
@@ -26,6 +33,11 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
         var profiles = await context.UserProfiles
             .AsNoTracking()
             .Include(x => x.Preferences)
+            .Include(x => x.Hobbies)
+            .Include(x => x.ProfilePhotos)
+            .Include(x => x.UserProfileAnswers)
+                .ThenInclude(x => x.QuestionAnswer)
+                    .ThenInclude(x => x.Question)
             .ToListAsync();
 
         return profiles.Select(MapToResponse).ToList();
@@ -142,7 +154,116 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
             Weight = profile.Weight,
             ZodiacSign = profile.ZodiacSign,
             RisingZodiacSign = profile.RisingZodiacSign,
-            IsVerified = profile.IsVerified
+            IsVerified = profile.IsVerified,
+            InterestedInGender = profile.Preferences?.InterestedInGender ?? (Gender)0,
+            MaxDistancePreference = profile.Preferences?.MaxDistancePreference ?? 0,
+            MinAgePreference = profile.Preferences?.MinAgePreference ?? 0,
+            MaxAgePreference = profile.Preferences?.MaxAgePreference ?? 0,
+            Hobbies = profile.Hobbies?.Select(h => new HobbyResponse
+            {
+                Id = h.Id,
+                Name = h.Name
+            }).ToList() ?? new List<HobbyResponse>(),
+            ProfilePhotos = profile.ProfilePhotos?.Select(p => new UserProfilePhotoResponse
+            {
+                Id = p.Id,
+                PhotoUrl = p.PhotoUrl,
+                IsMain = p.IsMain,
+                Order = p.Order
+            }).ToList() ?? new List<UserProfilePhotoResponse>(),
+            UserProfileAnswers = profile.UserProfileAnswers?.Select(a => new UserProfileAnswerResponse
+            {
+                Id = a.Id,
+                QuestionId = a.QuestionAnswer?.QuestionId ?? 0,
+                QuestionText = a.QuestionAnswer?.Question?.Text ?? string.Empty,
+                AnswerId = a.QuestionAnswerId,
+                AnswerText = a.QuestionAnswer?.AnswerText ?? string.Empty
+            }).ToList() ?? new List<UserProfileAnswerResponse>()
         };
+    }
+
+    public async Task SyncHobbiesAsync(int userId, SyncHobbiesRequest request)
+    {
+        var profile = await context.UserProfiles
+            .Include(x => x.Hobbies)
+            .FirstOrDefaultAsync(x => x.UserId == userId);
+
+        if (profile == null) throw new Exception("Profile not found");
+
+        // 1. Get requested hobbies from DB
+        var hobbies = await context.Hobbies
+            .Where(h => request.HobbyIds.Contains(h.Id))
+            .ToListAsync();
+
+        // 2. Clear and set (Sync)
+        profile.Hobbies.Clear();
+        foreach (var hobby in hobbies)
+        {
+            profile.Hobbies.Add(hobby);
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    public async Task SyncAnswersAsync(int userId, SyncAnswersRequest request)
+    {
+        var profile = await context.UserProfiles
+            .Include(x => x.UserProfileAnswers)
+            .FirstOrDefaultAsync(x => x.UserId == userId);
+
+        if (profile == null) throw new Exception("Profile not found");
+
+        // Simple sync: Remove all and add new ones (or diff if complex logic needed)
+        context.UserProfileAnswers.RemoveRange(profile.UserProfileAnswers);
+
+        profile.UserProfileAnswers = request.Answers.Select(a => new UserProfileAnswer
+        {
+            UserProfileId = profile.Id,
+            QuestionAnswerId = a.QuestionAnswerId
+        }).ToList();
+
+        await context.SaveChangesAsync();
+    }
+
+    public async Task AddPhotoAsync(int userId, AddPhotoRequest request)
+    {
+        var profile = await context.UserProfiles.FirstOrDefaultAsync(x => x.UserId == userId);
+        if (profile == null) throw new Exception("Profile not found");
+
+        var photo = new UserProfilePhoto
+        {
+            UserProfileId = profile.Id,
+            PhotoUrl = request.PhotoUrl,
+            IsMain = request.IsMain,
+            Order = request.Order
+        };
+
+        context.UserProfilePhotos.Add(photo);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task DeletePhotoAsync(int userId, int photoId)
+    {
+        var photo = await context.UserProfilePhotos
+            .FirstOrDefaultAsync(x => x.Id == photoId && x.UserProfile.UserId == userId);
+
+        if (photo == null) return;
+
+        context.UserProfilePhotos.Remove(photo);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task SetMainPhotoAsync(int userId, int photoId)
+    {
+        var photos = await context.UserProfilePhotos
+            .Where(x => x.UserProfile.UserId == userId)
+            .ToListAsync();
+
+        foreach (var p in photos)
+        {
+            p.IsMain = (p.Id == photoId);
+        }
+
+        await context.SaveChangesAsync();
     }
 }

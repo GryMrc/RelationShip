@@ -57,4 +57,39 @@ public class UserProfileController(IUserProfileService userProfileService) : Bas
         var profiles = await userProfileService.GetDiscoveryProfilesAsync(UserId);
         return Ok(profiles);
     }
+
+    [HttpPut("hobbies")]
+    public async Task<IActionResult> SyncHobbies(SyncHobbiesRequest request)
+    {
+        await userProfileService.SyncHobbiesAsync(UserId, request);
+        return NoContent();
+    }
+
+    [HttpPut("answers")]
+    public async Task<IActionResult> SyncAnswers(SyncAnswersRequest request)
+    {
+        await userProfileService.SyncAnswersAsync(UserId, request);
+        return NoContent();
+    }
+
+    [HttpPost("photos")]
+    public async Task<IActionResult> AddPhoto(AddPhotoRequest request)
+    {
+        await userProfileService.AddPhotoAsync(UserId, request);
+        return Ok();
+    }
+
+    [HttpDelete("photos/{photoId}")]
+    public async Task<IActionResult> DeletePhoto(int photoId)
+    {
+        await userProfileService.DeletePhotoAsync(UserId, photoId);
+        return NoContent();
+    }
+
+    [HttpPatch("photos/{photoId}/main")]
+    public async Task<IActionResult> SetMainPhoto(int photoId)
+    {
+        await userProfileService.SetMainPhotoAsync(UserId, photoId);
+        return NoContent();
+    }
 }

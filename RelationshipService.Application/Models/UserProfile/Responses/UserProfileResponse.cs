@@ -19,4 +19,8 @@ public class UserProfileResponse
     public sbyte MaxDistancePreference { get; set; }
     public byte MinAgePreference { get; set; }
     public byte MaxAgePreference { get; set; }
+    
+    public List<Hobby.Responses.HobbyResponse> Hobbies { get; set; }
+    public List<UserProfilePhotoResponse> ProfilePhotos { get; set; }
+    public List<UserProfileAnswerResponse> UserProfileAnswers { get; set; }
 }
