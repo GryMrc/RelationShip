@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace RelationshipService.Api.Controller;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 public class BaseController : ControllerBase
 {
     protected int UserId

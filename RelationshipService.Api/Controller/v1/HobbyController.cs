@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 using RelationshipService.Application.Models.Hobby.Requests;
 using RelationshipService.Application.Models.Hobby.Responses;
 using RelationshipService.Application.ServiceContracts;
 
-namespace RelationshipService.Api.Controller;
+namespace RelationshipService.Api.Controller.v1;
 
+[ApiVersion("1.0")]
 public class HobbyController(IHobbyService hobbyService) : BaseController
 {
     [HttpGet]

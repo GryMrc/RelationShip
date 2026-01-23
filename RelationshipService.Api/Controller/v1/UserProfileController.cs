@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 using RelationshipService.Application.Models.UserProfile.Requests;
 using RelationshipService.Application.ServiceContracts;
 
-namespace RelationshipService.Api.Controller;
+namespace RelationshipService.Api.Controller.v1;
 
+[ApiVersion("1.0")]
 public class UserProfileController(IUserProfileService userProfileService) : BaseController
 {
     [HttpGet]

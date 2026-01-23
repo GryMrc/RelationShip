@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 using RelationshipService.Application.Models.Question.Requests;
 using RelationshipService.Application.Models.Question.Responses;
 using RelationshipService.Application.ServiceContracts;
 
-namespace RelationshipService.Api.Controller;
+namespace RelationshipService.Api.Controller.v1;
 
+[ApiVersion("1.0")]
 public class QuestionController(IQuestionService questionService) : BaseController
 {
     [HttpGet]
