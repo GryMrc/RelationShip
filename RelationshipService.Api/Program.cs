@@ -36,7 +36,6 @@ builder.Services.AddScoped<IRelationShipDbContext>(provider =>
     provider.GetRequiredService<RelationShipDbContext>());
 
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
-builder.Services.AddScoped<IUserPreferencesService, UserPreferencesService>();
 builder.Services.AddScoped<IHobbyService, HobbyService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 

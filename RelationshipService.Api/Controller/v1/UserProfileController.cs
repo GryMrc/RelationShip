@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
 using RelationshipService.Application.Models.UserProfile.Requests;
+using RelationshipService.Application.Models.UserPrefences.Requests;
 using RelationshipService.Application.ServiceContracts;
 
 namespace RelationshipService.Api.Controller.v1;
@@ -92,6 +93,14 @@ public class UserProfileController(IUserProfileService userProfileService) : Bas
     public async Task<IActionResult> SetMainPhoto(int photoId)
     {
         await userProfileService.SetMainPhotoAsync(UserId, photoId);
+        return NoContent();
+    }
+
+    [HttpPut("preferences")]
+    public async Task<IActionResult> UpdatePreferences(UpdateUserPreferencesRequest request)
+    {
+        request.UserId = UserId;
+        await userProfileService.UpdatePreferencesAsync(request);
         return NoContent();
     }
 }

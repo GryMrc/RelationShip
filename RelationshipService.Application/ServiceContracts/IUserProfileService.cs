@@ -1,5 +1,6 @@
 ﻿using RelationshipService.Application.Models.UserProfile.Requests;
 using RelationshipService.Application.Models.UserProfile.Responses;
+using RelationshipService.Application.Models.UserPrefences.Requests;
 
 namespace RelationshipService.Application.ServiceContracts;
 
@@ -16,4 +17,5 @@ public interface IUserProfileService
     Task AddPhotoAsync(int userId, AddPhotoRequest request);
     Task DeletePhotoAsync(int userId, int photoId);
     Task SetMainPhotoAsync(int userId, int photoId);
+    Task UpdatePreferencesAsync(UpdateUserPreferencesRequest request);
 }
