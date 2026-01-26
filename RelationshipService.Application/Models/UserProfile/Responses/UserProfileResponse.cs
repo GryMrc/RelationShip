@@ -4,8 +4,11 @@ namespace RelationshipService.Application.Models.UserProfile.Responses;
 
 public class UserProfileResponse
 {
+    public int UserId { get; set; }
     public string Name { get; set; }
+
     public string? Bio { get; set; }
+
     public Gender Gender { get; set; }
     public double Latitude { get; set; }
     public double Longitude { get; set; }

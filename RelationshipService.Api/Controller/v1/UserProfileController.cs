@@ -3,6 +3,7 @@ using Asp.Versioning;
 using RelationshipService.Application.Models.UserProfile.Requests;
 using RelationshipService.Application.Models.UserPrefences.Requests;
 using RelationshipService.Application.ServiceContracts;
+using RelationshipService.Application.Models.UserProfile.Responses;
 
 namespace RelationshipService.Api.Controller.v1;
 
@@ -55,11 +56,12 @@ public class UserProfileController(IUserProfileService userProfileService) : Bas
     }
 
     [HttpGet("discovery")]
-    public async Task<IActionResult> GetDiscovery()
+    public async Task<ActionResult<List<DiscoveryProfileResponse>>> GetDiscovery()
     {
         var profiles = await userProfileService.GetDiscoveryProfilesAsync(UserId);
         return Ok(profiles);
     }
+
 
     [HttpPut("hobbies")]
     public async Task<IActionResult> SyncHobbies(SyncHobbiesRequest request)

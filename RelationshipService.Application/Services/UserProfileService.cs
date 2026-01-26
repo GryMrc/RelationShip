@@ -5,14 +5,13 @@ using RelationshipService.Application.Models.UserPrefences.Requests;
 using RelationshipService.Application.ServiceContracts;
 using RelationshipService.Domain.Entities;
 using NetTopologySuite.Geometries;
-using RelationshipService.Domain.Enums;
-using RelationshipService.Application.Models.Hobby.Responses;
+using RelationshipService.Application.Mappers;
 
 namespace RelationshipService.Application.Services;
 
 public class UserProfileService(IRelationShipDbContext context) : IUserProfileService
 {
-    public async Task<UserProfileResponse> GetByUserIdAsync(int userId)
+    public async Task<UserProfileResponse?> GetByUserIdAsync(int userId)
     {
         var profile = await context.UserProfiles
             .AsNoTracking()
@@ -24,9 +23,7 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
                     .ThenInclude(x => x.Question)
             .FirstOrDefaultAsync(x => x.UserId == userId);
 
-        if (profile == null) return null;
-
-        return MapToResponse(profile);
+        return profile?.ToResponse();
     }
 
     public async Task<List<UserProfileResponse>> GetAllAsync()
@@ -41,7 +38,7 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
                     .ThenInclude(x => x.Question)
             .ToListAsync();
 
-        return profiles.Select(MapToResponse).ToList();
+        return profiles.Select(p => p.ToResponse()).ToList();
     }
 
     public async Task<int> CreateAsync(CreateUserProfileRequest request)
@@ -100,33 +97,26 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
         await context.SaveChangesAsync();
     }
 
-    public async Task<List<UserProfileResponse>> GetDiscoveryProfilesAsync(int userId)
+    public async Task<List<DiscoveryProfileResponse>> GetDiscoveryProfilesAsync(int userId)
     {
-        // 1. Mevcut kullanıcının profilini ve tercihlerini al
         var currentUser = await context.UserProfiles
             .AsNoTracking()
             .Include(x => x.Preferences)
             .FirstOrDefaultAsync(x => x.UserId == userId && !x.IsDeleted);
 
         if (currentUser == null || currentUser.Preferences == null)
-            return new List<UserProfileResponse>();
+            return new List<DiscoveryProfileResponse>();
 
-        // 2. Daha önce etkileşim kurduğu (swipe) kullanıcıları al (Bunları keşiften elliyoruz)
         var swipedUserIds = await context.Swipes
             .Where(s => s.SwiperUserId == userId)
             .Select(s => s.SwipedUserId)
             .ToListAsync();
 
-        // 3. Yaş filtresi için tarih sınırlarını belirle
         var today = DateTime.UtcNow;
         var minBirthDate = today.AddYears(-currentUser.Preferences.MaxAgePreference);
         var maxBirthDate = today.AddYears(-currentUser.Preferences.MinAgePreference);
-
-        // 4. Mesafe filtresi (KM -> Derece yaklaşık dönüşümü)
-        // 1 derece yaklaşık 111.1km'dir. Derece üzerinden sorgu atmak GIST indeksini verimli kullandırır.
         double distanceLimitDegrees = currentUser.Preferences.MaxDistancePreference / 111.1;
 
-        // 5. Ana Keşif Sorgusu (Discovery Query)
         var profiles = await context.UserProfiles
             .AsNoTracking()
             .Include(x => x.ProfilePhotos)
@@ -135,58 +125,15 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
                 .ThenInclude(x => x.QuestionAnswer)
                     .ThenInclude(x => x.Question)
             .Where(p => p.UserId != userId && !p.IsDeleted)
-            .Where(p => !swipedUserIds.Contains(p.UserId)) // Daha önce swipe edilmemişler
-            .Where(p => p.Gender == currentUser.Preferences.InterestedInGender) // Cinsiyet tercihi
-            .Where(p => p.DateOfBirth >= minBirthDate && p.DateOfBirth <= maxBirthDate) // Yaş tercihi
-            .Where(p => p.Location.Distance(currentUser.Location) <= distanceLimitDegrees) // Mesafe tercihi
-            .OrderBy(x => EF.Functions.Random()) // Rastgelelik ekleyerek her defasında farklı profiller getiriyoruz
+            .Where(p => !swipedUserIds.Contains(p.UserId))
+            .Where(p => p.Gender == currentUser.Preferences.InterestedInGender)
+            .Where(p => p.DateOfBirth >= minBirthDate && p.DateOfBirth <= maxBirthDate)
+            .Where(p => p.Location.Distance(currentUser.Location) <= distanceLimitDegrees)
+            .OrderBy(x => EF.Functions.Random())
             .Take(20)
             .ToListAsync();
 
-
-        return profiles.Select(MapToResponse).ToList();
-    }
-
-    private static UserProfileResponse MapToResponse(UserProfile profile)
-    {
-        return new UserProfileResponse
-        {
-            Name = profile.Name,
-            Bio = profile.Bio,
-            Gender = profile.Gender,
-            Latitude = profile.Location.Y,
-            Longitude = profile.Location.X,
-            DateOfBirth = profile.DateOfBirth,
-            Height = profile.Height,
-            Weight = profile.Weight,
-            ZodiacSign = profile.ZodiacSign,
-            RisingZodiacSign = profile.RisingZodiacSign,
-            IsVerified = profile.IsVerified,
-            InterestedInGender = profile.Preferences?.InterestedInGender ?? (Gender)0,
-            MaxDistancePreference = profile.Preferences?.MaxDistancePreference ?? 0,
-            MinAgePreference = profile.Preferences?.MinAgePreference ?? 0,
-            MaxAgePreference = profile.Preferences?.MaxAgePreference ?? 0,
-            Hobbies = profile.Hobbies?.Select(h => new HobbyResponse
-            {
-                Id = h.Id,
-                Name = h.Name
-            }).ToList() ?? new List<HobbyResponse>(),
-            ProfilePhotos = profile.ProfilePhotos?.Select(p => new UserProfilePhotoResponse
-            {
-                Id = p.Id,
-                PhotoUrl = p.PhotoUrl,
-                IsMain = p.IsMain,
-                Order = p.Order
-            }).ToList() ?? new List<UserProfilePhotoResponse>(),
-            UserProfileAnswers = profile.UserProfileAnswers?.Select(a => new UserProfileAnswerResponse
-            {
-                Id = a.Id,
-                QuestionId = a.QuestionAnswer?.QuestionId ?? 0,
-                QuestionText = a.QuestionAnswer?.Question?.Text ?? string.Empty,
-                AnswerId = a.QuestionAnswerId,
-                AnswerText = a.QuestionAnswer?.AnswerText ?? string.Empty
-            }).ToList() ?? new List<UserProfileAnswerResponse>()
-        };
+        return profiles.Select(p => p.ToDiscoveryResponse(userId)).ToList();
     }
 
     public async Task SyncHobbiesAsync(int userId, SyncHobbiesRequest request)
@@ -197,12 +144,10 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
 
         if (profile == null) throw new Exception("Profile not found");
 
-        // 1. Get requested hobbies from DB
         var hobbies = await context.Hobbies
             .Where(h => request.HobbyIds.Contains(h.Id))
             .ToListAsync();
 
-        // 2. Clear and set (Sync)
         profile.Hobbies.Clear();
         foreach (var hobby in hobbies)
         {
@@ -220,7 +165,6 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
 
         if (profile == null) throw new Exception("Profile not found");
 
-        // Simple sync: Remove all and add new ones (or diff if complex logic needed)
         context.UserProfileAnswers.RemoveRange(profile.UserProfileAnswers);
 
         profile.UserProfileAnswers = request.Answers.Select(a => new UserProfileAnswer
@@ -305,3 +249,4 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
         await context.SaveChangesAsync();
     }
 }
+

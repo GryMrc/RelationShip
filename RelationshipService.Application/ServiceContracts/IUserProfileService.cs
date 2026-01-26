@@ -11,7 +11,8 @@ public interface IUserProfileService
     Task<int> CreateAsync(CreateUserProfileRequest request);
     Task UpdateAsync(UpdateUserProfileRequest request);
     Task DeleteAsync(int userId);
-    Task<List<UserProfileResponse>> GetDiscoveryProfilesAsync(int userId);
+    Task<List<DiscoveryProfileResponse>> GetDiscoveryProfilesAsync(int userId);
+
     Task SyncHobbiesAsync(int userId, SyncHobbiesRequest request);
     Task SyncAnswersAsync(int userId, SyncAnswersRequest request);
     Task AddPhotoAsync(int userId, AddPhotoRequest request);
