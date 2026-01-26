@@ -129,6 +129,11 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
         // 5. Ana Keşif Sorgusu (Discovery Query)
         var profiles = await context.UserProfiles
             .AsNoTracking()
+            .Include(x => x.ProfilePhotos)
+            .Include(x => x.Hobbies)
+            .Include(x => x.UserProfileAnswers)
+                .ThenInclude(x => x.QuestionAnswer)
+                    .ThenInclude(x => x.Question)
             .Where(p => p.UserId != userId && !p.IsDeleted)
             .Where(p => !swipedUserIds.Contains(p.UserId)) // Daha önce swipe edilmemişler
             .Where(p => p.Gender == currentUser.Preferences.InterestedInGender) // Cinsiyet tercihi
@@ -137,6 +142,7 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
             .OrderBy(x => EF.Functions.Random()) // Rastgelelik ekleyerek her defasında farklı profiller getiriyoruz
             .Take(20)
             .ToListAsync();
+
 
         return profiles.Select(MapToResponse).ToList();
     }

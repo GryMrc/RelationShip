@@ -7,8 +7,61 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        // Add X-User-Id header parameter globally to all operations
+        document.Components ??= new Microsoft.OpenApi.Models.OpenApiComponents();
+        document.Components.Parameters ??= new Dictionary<string, Microsoft.OpenApi.Models.OpenApiParameter>();
+        
+        document.Components.Parameters["X-User-Id"] = new Microsoft.OpenApi.Models.OpenApiParameter
+        {
+            Name = "X-User-Id",
+            In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+            Required = true,
+            Description = "User ID for authentication and authorization",
+            Schema = new Microsoft.OpenApi.Models.OpenApiSchema
+            {
+                Type = "integer",
+                Format = "int32"
+            }
+        };
+
+        // Add the parameter to all operations
+        foreach (var path in document.Paths.Values)
+        {
+            foreach (var operation in path.Operations.Values)
+            {
+                operation.Parameters ??= new List<Microsoft.OpenApi.Models.OpenApiParameter>();
+                operation.Parameters.Add(new Microsoft.OpenApi.Models.OpenApiParameter
+                {
+                    Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                    {
+                        Type = Microsoft.OpenApi.Models.ReferenceType.Parameter,
+                        Id = "X-User-Id"
+                    }
+                });
+            }
+        }
+
+        return Task.CompletedTask;
+    });
+});
 builder.Services.AddControllers();
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddCors(options =>
+    {
+        options.AddDefaultPolicy(policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+    });
+}
 
 builder.Services.AddApiVersioning(options =>
 {
@@ -46,6 +99,7 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
+    app.UseCors();
 }
 
 app.UseHttpsRedirection();
