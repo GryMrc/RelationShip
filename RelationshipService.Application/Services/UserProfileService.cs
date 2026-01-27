@@ -122,6 +122,7 @@ public class UserProfileService(
 
         var profiles = await context.UserProfiles
             .AsNoTracking()
+            .Include(x => x.Preferences)
             .Include(x => x.ProfilePhotos)
             .Include(x => x.Hobbies)
             .Include(x => x.UserProfileAnswers)
@@ -130,6 +131,7 @@ public class UserProfileService(
             .Where(p => p.UserId != userId && !p.IsDeleted)
             .Where(p => !swipedUserIds.Contains(p.UserId))
             .Where(p => p.Gender == currentUser.Preferences.InterestedInGender)
+            .Where(p => p.MatchMode == currentUser.MatchMode) // Same world filter (Optimized: No JOIN)
             .Where(p => p.DateOfBirth >= minBirthDate && p.DateOfBirth <= maxBirthDate)
             .Where(p => p.Location.Distance(currentUser.Location) <= distanceLimitDegrees)
             .OrderBy(x => EF.Functions.Random())
@@ -138,6 +140,7 @@ public class UserProfileService(
 
         return profiles.Select(p => p.ToDiscoveryResponse(userId, tokenService)).ToList();
     }
+
 
 
     public async Task SyncHobbiesAsync(int userId, SyncHobbiesRequest request)
@@ -224,15 +227,15 @@ public class UserProfileService(
 
     public async Task UpdatePreferencesAsync(UpdateUserPreferencesRequest request)
     {
-        var preferences = await context.UserPreferences
-            .FirstOrDefaultAsync(x => x.UserProfile.UserId == request.UserId);
+        var profile = await context.UserProfiles
+            .Include(x => x.Preferences)
+            .FirstOrDefaultAsync(x => x.UserId == request.UserId);
 
-        if (preferences == null)
+        if (profile == null) throw new Exception("Profile not found");
+
+        if (profile.Preferences == null)
         {
-            var profile = await context.UserProfiles.FirstOrDefaultAsync(x => x.UserId == request.UserId);
-            if (profile == null) throw new Exception("Profile not found");
-
-            preferences = new UserPreferences
+            profile.Preferences = new UserPreferences
             {
                 UserProfileId = profile.Id,
                 InterestedInGender = request.InterestedInGender,
@@ -240,17 +243,19 @@ public class UserProfileService(
                 MinAgePreference = request.MinAgePreference,
                 MaxAgePreference = request.MaxAgePreference
             };
-            context.UserPreferences.Add(preferences);
         }
         else
         {
-            preferences.InterestedInGender = request.InterestedInGender;
-            preferences.MaxDistancePreference = request.MaxDistancePreference;
-            preferences.MinAgePreference = request.MinAgePreference;
-            preferences.MaxAgePreference = request.MaxAgePreference;
+            profile.Preferences.InterestedInGender = request.InterestedInGender;
+            profile.Preferences.MaxDistancePreference = request.MaxDistancePreference;
+            profile.Preferences.MinAgePreference = request.MinAgePreference;
+            profile.Preferences.MaxAgePreference = request.MaxAgePreference;
         }
 
+        profile.MatchMode = request.MatchMode;
         await context.SaveChangesAsync();
     }
 }
+
+
 

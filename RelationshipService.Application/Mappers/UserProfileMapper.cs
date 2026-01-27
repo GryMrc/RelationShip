@@ -78,8 +78,13 @@ public static class UserProfileMapper
             Hobbies = response.Hobbies,
             ProfilePhotos = response.ProfilePhotos,
             UserProfileAnswers = response.UserProfileAnswers,
-            DiscoveryToken = tokenService.GenerateToken(swiperId, profile.UserId)
+            DiscoveryToken = tokenService.GenerateToken(swiperId, profile.UserId, profile.MatchMode, profile.SubscriptionPlan)
         };
+
+
+
+
+
 
         return discoveryResponse;
     }

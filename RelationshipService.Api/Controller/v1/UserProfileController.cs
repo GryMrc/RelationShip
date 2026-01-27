@@ -18,6 +18,8 @@ public class UserProfileController(IUserProfileService userProfileService) : Bas
         return Ok(profile);
     }
 
+
+
     [HttpGet("all")]
     public async Task<IActionResult> GetAll()
     {

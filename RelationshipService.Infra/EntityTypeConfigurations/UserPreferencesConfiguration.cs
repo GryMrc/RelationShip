@@ -19,6 +19,8 @@ public class UserPreferencesConfiguration : IEntityTypeConfiguration<UserPrefere
         builder.Property(x => x.MinAgePreference).HasColumnName("min_age_preference");
         builder.Property(x => x.MaxAgePreference).HasColumnName("max_age_preference");
 
+
+
         builder.HasOne(x => x.UserProfile)
             .WithOne(x => x.Preferences)
             .HasForeignKey<UserPreferences>(x => x.UserProfileId)

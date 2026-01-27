@@ -1,6 +1,7 @@
 using MassTransit;
 using RelationshipService.Application.Events;
 using RelationshipService.Domain.Entities;
+using RelationshipService.Domain.Enums;
 
 namespace RelationshipService.Application.Consumers;
 
@@ -17,6 +18,15 @@ public class SwipeConsumer(IRelationShipDbContext context) : IConsumer<SwipeEven
         );
 
         context.Swipes.Add(swipe);
+
+        if (@event.IsMatch)
+        {
+            var match = new Match(@event.SwiperUserId, @event.SwipedUserId, @event.MatchMode);
+            context.Matches.Add(match);
+        }
+
+
         await context.SaveChangesAsync();
     }
 }
+

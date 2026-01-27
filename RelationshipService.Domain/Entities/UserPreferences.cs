@@ -12,3 +12,5 @@ public class UserPreferences : Entity<int>
     public byte MinAgePreference { get; set; }
     public byte MaxAgePreference { get; set; }
 }
+
+

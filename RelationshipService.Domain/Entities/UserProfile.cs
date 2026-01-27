@@ -18,6 +18,12 @@ namespace RelationshipService.Domain.Entities
         public ZodiacSign? ZodiacSign { get; set; }
         public ZodiacSign? RisingZodiacSign { get; set; }
         public bool IsVerified { get; set; }
+        public MatchMode MatchMode { get; set; } = MatchMode.Date;
+        public SubscriptionPlan SubscriptionPlan { get; set; } = SubscriptionPlan.Free;
+
+
+
+
 
         public UserPreferences Preferences { get; set; }
 
