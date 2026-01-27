@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:latest
+    container_name: matcher-redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: matcher-rabbitmq
+    ports:
+      - "5672:5672"   # RabbitMQ port
+      - "15672:15672" # Management UI
+    restart: always

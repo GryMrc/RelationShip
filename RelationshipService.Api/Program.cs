@@ -4,6 +4,9 @@ using RelationshipService.Application.ServiceContracts;
 using RelationshipService.Infra;
 using RelationshipService.Application.Services;
 using Scalar.AspNetCore;
+using StackExchange.Redis;
+using MassTransit;
+using RelationshipService.Application.Consumers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,6 +77,23 @@ builder.Services.AddApiVersioning(options =>
     options.SubstituteApiVersionInUrl = true;
 });
 
+// Redis Configuration
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp => 
+    ConnectionMultiplexer.Connect("localhost"));
+
+// MassTransit & RabbitMQ Configuration
+builder.Services.AddMassTransit(x =>
+{
+    x.AddConsumer<SwipeConsumer>();
+
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host("localhost", "/");
+        cfg.ConfigureEndpoints(context);
+    });
+});
+
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<RelationShipDbContext>(options =>
@@ -91,6 +111,9 @@ builder.Services.AddScoped<IRelationShipDbContext>(provider =>
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<IHobbyService, HobbyService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
+builder.Services.AddScoped<IDiscoveryTokenService, DiscoveryTokenService>();
+builder.Services.AddScoped<ISwipeService, SwipeService>();
+
 
 var app = builder.Build();
 

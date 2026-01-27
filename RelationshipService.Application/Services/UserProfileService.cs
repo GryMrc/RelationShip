@@ -9,8 +9,11 @@ using RelationshipService.Application.Mappers;
 
 namespace RelationshipService.Application.Services;
 
-public class UserProfileService(IRelationShipDbContext context) : IUserProfileService
+public class UserProfileService(
+    IRelationShipDbContext context, 
+    IDiscoveryTokenService tokenService) : IUserProfileService
 {
+
     public async Task<UserProfileResponse?> GetByUserIdAsync(int userId)
     {
         var profile = await context.UserProfiles
@@ -133,8 +136,9 @@ public class UserProfileService(IRelationShipDbContext context) : IUserProfileSe
             .Take(20)
             .ToListAsync();
 
-        return profiles.Select(p => p.ToDiscoveryResponse(userId)).ToList();
+        return profiles.Select(p => p.ToDiscoveryResponse(userId, tokenService)).ToList();
     }
+
 
     public async Task SyncHobbiesAsync(int userId, SyncHobbiesRequest request)
     {
