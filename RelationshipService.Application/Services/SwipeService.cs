@@ -16,11 +16,11 @@ public class SwipeService(
     IConfiguration configuration) : ISwipeService
 {
     private readonly IDatabase _db = redis.GetDatabase();
+    private bool _dbCheckRequired = false;
 
     public async Task<SwipeResponse> SwipeAsync(int swiperId, SwipeRequest request)
     {
-        // 1. Validate Token (Mode-Aware & Plan-Aware Security)
-        // Since the token is cryptographically signed with the mode, we don't need a DB hit here.
+        // 1. Validate Token (Quick cryptographic check)
         if (!tokenService.ValidateToken(swiperId, request.TargetUserId, request.MatchMode, request.DiscoveryToken, out var plan))
         {
             throw new Exception("Invalid or expired discovery token for this mode");
@@ -28,21 +28,17 @@ public class SwipeService(
 
         // 2. Daily Limit Check (Redis-First)
         var limit = configuration.GetValue<int>($"SwipeSettings:DailyLimits:{plan}");
-        
-        // If limit is not -1 (Unlimited), check current count
         if (limit != -1)
         {
             var today = DateTime.UtcNow.ToString("yyyyMMdd");
             var limitKey = $"user:{swiperId}:swipe-count:{today}";
             
             var currentCount = await _db.StringGetAsync(limitKey);
-            
             if (currentCount.HasValue && (int)currentCount >= limit)
             {
                 throw new Exception($"You have reached your daily swipe limit for {plan} plan.");
             }
 
-            // Increment and set expiry (24h) only on first increment
             var newValue = await _db.StringIncrementAsync(limitKey);
             if (newValue == 1)
             {
@@ -52,24 +48,23 @@ public class SwipeService(
 
         var swipeKey = $"user:{swiperId}:swipes:{(int)request.MatchMode}";
 
-        // 2. Duplicate Check: Prevent multiple swipes on the same user in this mode
+        // 3. Duplicate Check: Prevent multiple swipes on the same user in this mode
         var existingSwipe = await _db.HashGetAsync(swipeKey, request.TargetUserId.ToString());
         if (existingSwipe.HasValue)
         {
             throw new Exception("You have already swiped on this user in this mode");
         }
 
-        // 3. Store current swipe in Redis for this mode (TTL 48h)
+        // 4. Store current swipe in Redis for "Hot Match" window (TTL 48h)
         await _db.HashSetAsync(swipeKey, request.TargetUserId.ToString(), (int)request.SwipeType);
         await _db.KeyExpireAsync(swipeKey, TimeSpan.FromHours(48));
 
-        // 4. Check for Match (Only if it's a Like or SuperLike in the same mode)
+        // 5. Optimistic Match Check: Check if the target user has already liked us IN REDIS
         bool isMatch = false;
         SwipeType? matchedSwipeType = null;
 
         if (request.SwipeType != SwipeType.Dislike)
         {
-            // Check if the target user has already liked the current user IN THE SAME MODE
             var targetSwipeKey = $"user:{request.TargetUserId}:swipes:{(int)request.MatchMode}";
             var targetSwipeValue = await _db.HashGetAsync(targetSwipeKey, swiperId.ToString());
             
@@ -81,9 +76,13 @@ public class SwipeService(
                     isMatch = true;
                 }
             }
+            else
+            {
+                _dbCheckRequired = true;
+            }
         }
 
-        // 5. Publish Event to RabbitMQ for DB persistence
+        // 6. Fire and Forget: Let the Consumer handle persistence and definitive matching
         await publishEndpoint.Publish(new SwipeEvent
         {
             SwiperUserId = swiperId,
@@ -91,10 +90,8 @@ public class SwipeService(
             SwipeType = request.SwipeType,
             MatchMode = request.MatchMode,
             IsMatch = isMatch,
-            CreatedAt = DateTime.UtcNow
+            DbCheckRequired = _dbCheckRequired
         });
-
-
 
         return new SwipeResponse 
         { 

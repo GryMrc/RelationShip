@@ -29,10 +29,6 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
         builder.Property(x => x.MatchMode).HasColumnName("match_mode").HasDefaultValue(MatchMode.Date).IsRequired();
         builder.Property(x => x.SubscriptionPlan).HasColumnName("subscription_plan").HasDefaultValue(SubscriptionPlan.Free).IsRequired();
 
-
-
-
-
         // Spatial Index (GIST) for high-performance location queries
         builder.HasIndex(x => x.Location).HasMethod("GIST");
 
@@ -44,8 +40,6 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
         // Composite Index for Discovery (MatchMode + Gender + IsDeleted optimization)
         builder.HasIndex(x => new { x.MatchMode, x.Gender, x.IsDeleted })
                .HasDatabaseName("IX_UserProfile_Discovery_BasicFilter");
-
-
 
         // Index for Age filtering (Range queries)
         builder.HasIndex(x => x.DateOfBirth)

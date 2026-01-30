@@ -9,7 +9,6 @@ public record SwipeEvent
     public SwipeType SwipeType { get; init; }
     public MatchMode MatchMode { get; init; }
     public bool IsMatch { get; init; }
-
-    public DateTime CreatedAt { get; init; }
+    public bool DbCheckRequired { get; set; }
 }
 
