@@ -31,9 +31,6 @@ public class SwipeService(
         SwipeType? matchedSwipeType = null;
         bool dbCheckRequired = false;
 
-        // Create a short-lived timeout for Redis operations
-        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
-
         try
         {
             // 2. Daily Limit Check (Atomic INCR)
@@ -51,6 +48,8 @@ public class SwipeService(
 
                 if (newValue > limit)
                 {
+                    // Rollback: Decrement the counter since we're rejecting this swipe
+                    await _db.StringDecrementAsync(limitKey);
                     throw new Exception($"You have reached your daily swipe limit for {plan} plan.");
                 }
             }
