@@ -7,8 +7,8 @@ public record SwipeEvent
     public int SwiperUserId { get; init; }
     public int SwipedUserId { get; init; }
     public SwipeType SwipeType { get; init; }
-    public MatchMode MatchMode { get; init; }
-    public bool IsMatch { get; init; }
-    public bool DbCheckRequired { get; set; }
+    public Mode Mode { get; init; }
+    public bool IsRedisMatch { get; init; }
+    public int? OppositeSwipeType { get; init; }
 }
 

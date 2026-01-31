@@ -7,6 +7,6 @@ public class SwipeRequest
     public int TargetUserId { get; set; }
     public SwipeType SwipeType { get; set; }
     public string DiscoveryToken { get; set; }
-    public MatchMode MatchMode { get; set; }
+    public Mode Mode { get; set; }
 }
 

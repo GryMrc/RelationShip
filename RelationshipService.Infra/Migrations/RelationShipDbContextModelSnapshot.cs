@@ -81,9 +81,9 @@ namespace RelationshipService.Infra.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
 
-                    b.Property<int>("MatchMode")
+                    b.Property<int>("Mode")
                         .HasColumnType("integer")
-                        .HasColumnName("match_mode");
+                        .HasColumnName("mode");
 
                     b.Property<int>("MatchStatus")
                         .HasColumnType("integer")
@@ -201,6 +201,10 @@ namespace RelationshipService.Infra.Migrations
                     b.Property<int>("IsLiked")
                         .HasColumnType("integer")
                         .HasColumnName("is_liked");
+
+                    b.Property<int>("Mode")
+                        .HasColumnType("integer")
+                        .HasColumnName("mode");
 
                     b.Property<int>("SwipedUserId")
                         .HasColumnType("integer")
@@ -355,11 +359,11 @@ namespace RelationshipService.Infra.Migrations
                         .HasColumnType("geometry(Point, 4326)")
                         .HasColumnName("location");
 
-                    b.Property<int>("MatchMode")
+                    b.Property<int>("Mode")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(1)
-                        .HasColumnName("match_mode");
+                        .HasColumnName("mode");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -406,7 +410,7 @@ namespace RelationshipService.Infra.Migrations
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Location"), "GIST");
 
-                    b.HasIndex("MatchMode", "Gender", "IsDeleted")
+                    b.HasIndex("Mode", "Gender", "IsDeleted")
                         .HasDatabaseName("IX_UserProfile_Discovery_BasicFilter");
 
                     b.ToTable("user_profiles", (string)null);

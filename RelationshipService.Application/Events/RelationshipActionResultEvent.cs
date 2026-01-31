@@ -6,7 +6,8 @@ public enum RelationshipNotificationType
 {
     NewLike = 1,
     NewMatch = 2,
-    NewMessage = 3
+    MissedMatch = 3,
+    NewMessage = 4
 }
 
 public class RelationshipActionResultEvent
@@ -14,5 +15,5 @@ public class RelationshipActionResultEvent
     public int UserAId { get; set; }
     public int? UserBId { get; set; }
     public RelationshipNotificationType Type { get; set; }
-    public MatchMode MatchMode { get; set; }
+    public Mode Mode { get; init; }
 }

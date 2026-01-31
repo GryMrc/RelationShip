@@ -16,70 +16,91 @@ public class SwipeConsumer(IRelationShipDbContext context, ILogger<SwipeConsumer
         bool isDbMatch = false;
         RelationshipActionResultEvent? pendingNotification = null;
 
-        // 1. Persist the Swipe (Idempotency check for Redis failures)
-        var existingSwipe = await context.Swipes
+        // 1. Fetch relevant swipes (Own and Reciprocal) in one go
+        var swipes = await context.Swipes
             .AsNoTracking()
-            .AnyAsync(s => s.SwiperUserId == @event.SwiperUserId && s.SwipedUserId == @event.SwipedUserId);
+            .Where(s => ((s.SwiperUserId == @event.SwiperUserId && s.SwipedUserId == @event.SwipedUserId) ||
+                         (s.SwiperUserId == @event.SwipedUserId && s.SwipedUserId == @event.SwiperUserId)) &&
+                        s.Mode == @event.Mode)
+            .ToListAsync();
 
-        bool isNewSwipe = !existingSwipe;
+        var existingSwipe = swipes.FirstOrDefault(s => s.SwiperUserId == @event.SwiperUserId);
+        
+        // Use Redis-discovered opposite swipe if available, otherwise fallback to DB result
+        Swipe? oppositeSwipe = null;
+        if (@event.OppositeSwipeType.HasValue)
+        {
+            // Create a dummy object to hold the swipe type discovered in Redis
+            oppositeSwipe = new Swipe(@event.SwipedUserId, @event.SwiperUserId, (SwipeType)@event.OppositeSwipeType.Value, @event.Mode);
+        }
+        else
+        {
+            oppositeSwipe = swipes.FirstOrDefault(s => s.SwiperUserId == @event.SwipedUserId);
+        }
+        
+        bool isNewSwipe = existingSwipe == null;
         if (isNewSwipe)
         {
-            var swipe = new Swipe(
-                @event.SwiperUserId,
-                @event.SwipedUserId,
-                @event.SwipeType
-            );
-
-            context.Swipes.Add(swipe);
+            context.Swipes.Add(new Swipe(@event.SwiperUserId, @event.SwipedUserId, @event.SwipeType, @event.Mode));
         }
 
         // 2. Definitive Match Check
-        if (@event.DbCheckRequired)
+        // A match only exists if BOTH parties liked.
+        if (@event.SwipeType != SwipeType.Dislike)
         {
-            Swipe? oppositeSwipe = null;
-            // We fetch the full swipe to know if it's a Like, Dislike, or Nothing
-            oppositeSwipe = await context.Swipes
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s =>
-                    s.SwiperUserId == @event.SwipedUserId &&
-                    s.SwipedUserId == @event.SwiperUserId);
-
-            if(oppositeSwipe is not null)
+            if (oppositeSwipe is { SwipeType: not SwipeType.Dislike })
             {
-               if (oppositeSwipe.SwipeType != SwipeType.Dislike)
-                {
-                    isDbMatch = true;
-                }
+                isDbMatch = true;
             }
-            else if (isNewSwipe && @event.SwipeType != SwipeType.Dislike)
+        }
+
+        var matchDetected = isDbMatch || @event.IsRedisMatch;
+
+        // 3. Notification & Match Lifecycle
+        if (matchDetected == false && isNewSwipe)
+        {
+            // Case A: Ahmet liked, Ayşe unknown -> NewLike notification for Ayşe
+            if (oppositeSwipe is null && @event.SwipeType != SwipeType.Dislike)
             {
-                // New Like Notification: Only if it's a first-time Like and target hasn't swiped back yet
                 pendingNotification = new RelationshipActionResultEvent
                 {
                     UserAId = @event.SwipedUserId,
                     UserBId = null,
                     Type = RelationshipNotificationType.NewLike,
-                    MatchMode = @event.MatchMode
+                    Mode = @event.Mode
+                };
+            }
+            // Case B: Ahmet DISLIKED, but Ayşe had already LIKED Ahmet -> MissedMatch notification for Ahmet
+            else if (oppositeSwipe is { SwipeType: not SwipeType.Dislike } && @event.SwipeType == SwipeType.Dislike)
+            {
+                pendingNotification = new RelationshipActionResultEvent
+                {
+                    UserAId = @event.SwiperUserId,
+                    UserBId = null,
+                    Type = RelationshipNotificationType.MissedMatch,
+                    Mode = @event.Mode
                 };
             }
         }
 
-        if (isDbMatch || @event.IsMatch)
+        if (matchDetected)
         {
-            //To do : burasi her zaman kucuk id buyuk id seklinde kaydetmeli
+            // We double-verify here just in case, though isMatch should already be false if Dislike
+            if (@event.SwipeType == SwipeType.Dislike) return; 
+
             var userAId = Math.Min(@event.SwiperUserId, @event.SwipedUserId);
             var userBId = Math.Max(@event.SwiperUserId, @event.SwipedUserId);
 
-            var existingMatch = await context.Matches
+            var alreadyMatched = await context.Matches
                 .AsNoTracking()
                 .AnyAsync(m => m.UserAId == userAId && m.UserBId == userBId);
 
-            if (!existingMatch)
+            if (!alreadyMatched)
             {
                 var match = new Match(
                     userAId,
                     userBId,
-                    @event.MatchMode
+                    @event.Mode
                 );
 
                 context.Matches.Add(match);
@@ -88,9 +109,9 @@ public class SwipeConsumer(IRelationShipDbContext context, ILogger<SwipeConsumer
                 pendingNotification = new RelationshipActionResultEvent
                 {
                     UserAId = @event.SwipedUserId, // Target always gets notification
-                    UserBId = @event.IsMatch ? null : @event.SwiperUserId, // Swiper only gets notif if it was a DB-discovered match
+                    UserBId = @event.IsRedisMatch ? null : @event.SwiperUserId, // Swiper only gets notif if it was a DB-discovered match
                     Type = RelationshipNotificationType.NewMatch,
-                    MatchMode = @event.MatchMode
+                    Mode = @event.Mode
                 };
             }
         }
@@ -102,7 +123,7 @@ public class SwipeConsumer(IRelationShipDbContext context, ILogger<SwipeConsumer
             {
                 await context.SaveChangesAsync();
             }
-            
+
             // Step 2: Publish notification AFTER successful database commit
             // This ensures data consistency: if publish fails, data is still persisted
             // and can be recovered via a separate reconciliation process
@@ -112,11 +133,11 @@ public class SwipeConsumer(IRelationShipDbContext context, ILogger<SwipeConsumer
                 {
                     await contextMessage.Publish(pendingNotification);
                     logger.LogInformation(
-                        "Notification published successfully. Type: {NotificationType}, UserA: {UserAId}, UserB: {UserBId}, MatchMode: {MatchMode}",
+                        "Notification published successfully. Type: {NotificationType}, UserA: {UserAId}, UserB: {UserBId}, Mode: {Mode}",
                         pendingNotification.Type,
                         pendingNotification.UserAId,
                         pendingNotification.UserBId,
-                        pendingNotification.MatchMode);
+                        pendingNotification.Mode);
                 }
                 catch (Exception publishEx)
                 {
@@ -125,16 +146,16 @@ public class SwipeConsumer(IRelationShipDbContext context, ILogger<SwipeConsumer
                     // Log as error for monitoring/alerting - may need manual intervention or reconciliation job
                     logger.LogError(publishEx,
                         "CRITICAL: Database commit succeeded but notification publish failed. " +
-                        "Type: {NotificationType}, UserA: {UserAId}, UserB: {UserBId}, MatchMode: {MatchMode}, " +
+                        "Type: {NotificationType}, UserA: {UserAId}, UserB: {UserBId}, Mode: {Mode}, " +
                         "SwiperUserId: {SwiperUserId}, SwipedUserId: {SwipedUserId}. " +
                         "Data is persisted but notification was not sent. Consider implementing outbox pattern or reconciliation job.",
                         pendingNotification.Type,
                         pendingNotification.UserAId,
                         pendingNotification.UserBId,
-                        pendingNotification.MatchMode,
+                        pendingNotification.Mode,
                         @event.SwiperUserId,
                         @event.SwipedUserId);
-                    
+
                     // Note: We don't throw here because:
                     // 1. DB transaction already committed - can't rollback
                     // 2. Throwing would cause MassTransit retry, potentially creating duplicates

@@ -131,7 +131,7 @@ public class UserProfileService(
             .Where(p => p.UserId != userId && !p.IsDeleted)
             .Where(p => !swipedUserIds.Contains(p.UserId))
             .Where(p => p.Gender == currentUser.Preferences.InterestedInGender)
-            .Where(p => p.MatchMode == currentUser.MatchMode) // Same world filter (Optimized: No JOIN)
+            .Where(p => p.Mode == currentUser.Mode) // Same world filter (Optimized: No JOIN)
             .Where(p => p.DateOfBirth >= minBirthDate && p.DateOfBirth <= maxBirthDate)
             .Where(p => p.Location.Distance(currentUser.Location) <= distanceLimitDegrees)
             .OrderBy(x => EF.Functions.Random())
@@ -252,7 +252,7 @@ public class UserProfileService(
             profile.Preferences.MaxAgePreference = request.MaxAgePreference;
         }
 
-        profile.MatchMode = request.MatchMode;
+        profile.Mode = request.Mode;
         await context.SaveChangesAsync();
     }
 }

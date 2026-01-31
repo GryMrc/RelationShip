@@ -9,7 +9,7 @@ public class DiscoveryTokenService : IDiscoveryTokenService
 {
     private const string SecretKey = "your-very-secure-secret-key-change-me-later";
 
-    public string GenerateToken(int swiperId, int swipedId, MatchMode mode, SubscriptionPlan plan)
+    public string GenerateToken(int swiperId, int swipedId, Mode mode, SubscriptionPlan plan)
     {
         var expiry = DateTime.UtcNow.AddHours(24).Ticks;
         var payload = $"{swiperId}:{swipedId}:{(int)mode}:{(int)plan}:{expiry}";
@@ -22,7 +22,7 @@ public class DiscoveryTokenService : IDiscoveryTokenService
         return $"{Convert.ToBase64String(Encoding.UTF8.GetBytes(payload))}.{signature}";
     }
 
-    public bool ValidateToken(int swiperId, int swipedId, MatchMode mode, string token, out SubscriptionPlan plan)
+    public bool ValidateToken(int swiperId, int swipedId, Mode mode, string token, out SubscriptionPlan plan)
     {
         plan = SubscriptionPlan.Free;
         try

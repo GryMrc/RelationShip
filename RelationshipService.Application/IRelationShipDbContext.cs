@@ -1,21 +1,23 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using RelationshipService.Domain.Entities;
 
 namespace RelationshipService.Application;
 
 public interface IRelationShipDbContext
 {
-    public DbSet<UserProfile> UserProfiles { get; set; }
-    public DbSet<UserProfilePhoto> UserProfilePhotos { get; set; }
-    public DbSet<UserPreferences> UserPreferences { get; set; }
-    public DbSet<UserLocationHistory> UserLocationHistories { get; set; }
-    public DbSet<Match> Matches { get; set; }
-    public DbSet<Swipe> Swipes { get; set; }
-    public DbSet<Hobby> Hobbies { get; set; }
-    public DbSet<Question> Questions { get; set; }
-    public DbSet<QuestionAnswer> QuestionAnswers { get; set; }
-    public DbSet<UserProfileAnswer> UserProfileAnswers { get; set; }
-    public DbSet<UserProfileHobby> UserProfileHobbies { get; set; }
+    DbSet<UserProfile> UserProfiles { get; set; }
+    DbSet<UserProfilePhoto> UserProfilePhotos { get; set; }
+    DbSet<UserPreferences> UserPreferences { get; set; }
+    DbSet<UserLocationHistory> UserLocationHistories { get; set; }
+    DbSet<Match> Matches { get; set; }
+    DbSet<Swipe> Swipes { get; set; }
+    DbSet<Hobby> Hobbies { get; set; }
+    DbSet<Question> Questions { get; set; }
+    DbSet<QuestionAnswer> QuestionAnswers { get; set; }
+    DbSet<UserProfileAnswer> UserProfileAnswers { get; set; }
+    DbSet<UserProfileHobby> UserProfileHobbies { get; set; }
 
+    ChangeTracker ChangeTracker { get;}
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

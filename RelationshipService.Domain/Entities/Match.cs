@@ -7,17 +7,17 @@ public class Match : Entity<int>
 {
     private Match() { } // For EF Core
 
-    public Match(int userAId, int userBId, MatchMode matchMode = MatchMode.Date)
+    public Match(int userAId, int userBId, Mode mode = Mode.Date)
     {
         UserAId = userAId;
         UserBId = userBId;
-        MatchMode = matchMode;
+        Mode = mode;
         MatchStatus = MatchStatus.Active;
     }
 
     public int UserAId { get; private set; }
     public int UserBId { get; private set; }
-    public MatchMode MatchMode { get; set; }
+    public Mode Mode { get; set; }
     public MatchStatus MatchStatus { get; set; }
     public int FreezedUserId { get; set; }
     public int DeletedUserId { get; set; }

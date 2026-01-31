@@ -11,7 +11,7 @@ public class UpdateUserPreferencesRequest
     public sbyte MaxDistancePreference { get; set; }
     public byte MinAgePreference { get; set; }
     public byte MaxAgePreference { get; set; }
-    public MatchMode MatchMode { get; set; }
+    public Mode Mode { get; set; }
 }
 
 
