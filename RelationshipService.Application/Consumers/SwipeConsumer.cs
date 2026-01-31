@@ -1,5 +1,6 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using RelationshipService.Application.Events;
 using RelationshipService.Domain.Entities;
@@ -7,7 +8,7 @@ using RelationshipService.Domain.Enums;
 
 namespace RelationshipService.Application.Consumers;
 
-public class SwipeConsumer(IRelationShipDbContext context) : IConsumer<SwipeEvent>
+public class SwipeConsumer(IRelationShipDbContext context, ILogger<SwipeConsumer> logger) : IConsumer<SwipeEvent>
 {
     public async Task Consume(ConsumeContext<SwipeEvent> contextMessage)
     {
@@ -96,21 +97,60 @@ public class SwipeConsumer(IRelationShipDbContext context) : IConsumer<SwipeEven
 
         try
         {
+            // Step 1: Persist to database first
             if (context.ChangeTracker.HasChanges())
             {
                 await context.SaveChangesAsync();
             }
             
-            // Push notification only AFTER successful database commit
+            // Step 2: Publish notification AFTER successful database commit
+            // This ensures data consistency: if publish fails, data is still persisted
+            // and can be recovered via a separate reconciliation process
             if (pendingNotification != null)
             {
-                await contextMessage.Publish(pendingNotification);
+                try
+                {
+                    await contextMessage.Publish(pendingNotification);
+                    logger.LogInformation(
+                        "Notification published successfully. Type: {NotificationType}, UserA: {UserAId}, UserB: {UserBId}, MatchMode: {MatchMode}",
+                        pendingNotification.Type,
+                        pendingNotification.UserAId,
+                        pendingNotification.UserBId,
+                        pendingNotification.MatchMode);
+                }
+                catch (Exception publishEx)
+                {
+                    // Critical: DB commit succeeded but notification publish failed
+                    // Data is persisted but user won't receive notification
+                    // Log as error for monitoring/alerting - may need manual intervention or reconciliation job
+                    logger.LogError(publishEx,
+                        "CRITICAL: Database commit succeeded but notification publish failed. " +
+                        "Type: {NotificationType}, UserA: {UserAId}, UserB: {UserBId}, MatchMode: {MatchMode}, " +
+                        "SwiperUserId: {SwiperUserId}, SwipedUserId: {SwipedUserId}. " +
+                        "Data is persisted but notification was not sent. Consider implementing outbox pattern or reconciliation job.",
+                        pendingNotification.Type,
+                        pendingNotification.UserAId,
+                        pendingNotification.UserBId,
+                        pendingNotification.MatchMode,
+                        @event.SwiperUserId,
+                        @event.SwipedUserId);
+                    
+                    // Note: We don't throw here because:
+                    // 1. DB transaction already committed - can't rollback
+                    // 2. Throwing would cause MassTransit retry, potentially creating duplicates
+                    // 3. Better to log and handle via monitoring/reconciliation
+                }
             }
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "23505" })
         {
             // Unique Violation: Data already exists, meaning notification was likely sent by a previous attempt/instance.
             // We skip the notification here to avoid duplicates.
+            logger.LogInformation(
+                "Duplicate swipe detected (unique constraint violation). SwiperUserId: {SwiperUserId}, SwipedUserId: {SwipedUserId}. " +
+                "This is expected during retries or concurrent processing.",
+                @event.SwiperUserId,
+                @event.SwipedUserId);
         }
     }
 }
