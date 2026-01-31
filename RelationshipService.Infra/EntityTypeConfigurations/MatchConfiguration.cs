@@ -20,5 +20,8 @@ public class MatchConfiguration : IEntityTypeConfiguration<Match>
         builder.Property(x => x.FreezedUserId).HasColumnName("freezed_user_id");
         builder.Property(x => x.DeletedUserId).HasColumnName("deleted_user_id");
         builder.Property(x => x.Reason).HasColumnName("reason").HasMaxLength(500);
+
+        // Unique constraint to prevent duplicate matches between same two users
+        builder.HasIndex(x => new { x.UserAId, x.UserBId }).IsUnique().HasDatabaseName("idx_matches_a_b_unique");
     }
 }

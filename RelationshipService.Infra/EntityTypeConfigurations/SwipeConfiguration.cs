@@ -15,10 +15,10 @@ public class SwipeConfiguration : IEntityTypeConfiguration<Swipe>
 
         builder.Property(x => x.SwiperUserId).HasColumnName("swiper_user_id").IsRequired();
         builder.Property(x => x.SwipedUserId).HasColumnName("swiped_user_id").IsRequired();
-        builder.Property(x => x.IsLiked).HasColumnName("is_liked").IsRequired();
+        builder.Property(x => x.SwipeType).HasColumnName("swipe_type").IsRequired();
 
         // Indexes for performance
-        builder.HasIndex(x => new { x.SwiperUserId, x.SwipedUserId }).HasDatabaseName("idx_swipes_swiper_swiped");
+        builder.HasIndex(x => new { x.SwiperUserId, x.SwipedUserId }).IsUnique().HasDatabaseName("idx_swipes_swiper_swiped_unique");
         builder.HasIndex(x => new { x.SwipedUserId, x.SwiperUserId }).HasDatabaseName("idx_swipes_swiped_swiper");
     }
 }

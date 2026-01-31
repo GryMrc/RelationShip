@@ -79,7 +79,16 @@ builder.Services.AddApiVersioning(options =>
 
 // Redis Configuration
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp => 
-    ConnectionMultiplexer.Connect("localhost"));
+{
+    var configuration = new ConfigurationOptions
+    {
+        EndPoints = { "localhost" },
+        SyncTimeout = 500,        // 500ms timeout for sync operations
+        ConnectTimeout = 2000,    // 2s timeout for connecting
+        AbortOnConnectFail = false
+    };
+    return ConnectionMultiplexer.Connect(configuration);
+});
 
 // MassTransit & RabbitMQ Configuration
 builder.Services.AddMassTransit(x =>
@@ -89,6 +98,15 @@ builder.Services.AddMassTransit(x =>
     x.UsingRabbitMq((context, cfg) =>
     {
         cfg.Host("localhost", "/");
+        
+        // Retry Policy: Exponential backoff to handle transient DB/Network issues
+        cfg.UseMessageRetry(r => r.Exponential(
+            3,                          // retry count
+            TimeSpan.FromSeconds(2),    // min interval
+            TimeSpan.FromSeconds(10),   // max interval
+            TimeSpan.FromSeconds(2)     // interval delta
+        ));
+
         cfg.ConfigureEndpoints(context);
     });
 });

@@ -7,16 +7,16 @@ public class Swipe : Entity<int>
 {
     private Swipe() { } // For EF Core
 
-    public Swipe(int swiperUserId, int swipedUserId, SwipeType isLiked)
+    public Swipe(int swiperUserId, int swipedUserId, SwipeType swipeType)
     {
         SwiperUserId = swiperUserId;
         SwipedUserId = swipedUserId;
-        IsLiked = isLiked;
+        SwipeType = swipeType;
     }
 
     public int SwiperUserId { get; private set; }
 
     public int SwipedUserId { get; private set; }
 
-    public SwipeType IsLiked { get; private set; }  // superlike, like, dislike, supermessagelike
+    public SwipeType SwipeType { get; private set; }  // superlike, like, dislike, supermessagelike
 }
