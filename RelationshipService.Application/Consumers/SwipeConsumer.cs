@@ -20,7 +20,8 @@ public class SwipeConsumer(IRelationShipDbContext context) : IConsumer<SwipeEven
             .AsNoTracking()
             .AnyAsync(s => s.SwiperUserId == @event.SwiperUserId && s.SwipedUserId == @event.SwipedUserId);
 
-        if (!existingSwipe)
+        bool isNewSwipe = !existingSwipe;
+        if (isNewSwipe)
         {
             var swipe = new Swipe(
                 @event.SwiperUserId,
@@ -49,8 +50,9 @@ public class SwipeConsumer(IRelationShipDbContext context) : IConsumer<SwipeEven
                     isDbMatch = true;
                 }
             }
-            else
+            else if (isNewSwipe && @event.SwipeType != SwipeType.Dislike)
             {
+                // New Like Notification: Only if it's a first-time Like and target hasn't swiped back yet
                 pendingNotification = new RelationshipActionResultEvent
                 {
                     UserAId = @event.SwipedUserId,
@@ -80,20 +82,24 @@ public class SwipeConsumer(IRelationShipDbContext context) : IConsumer<SwipeEven
                 );
 
                 context.Matches.Add(match);
-            }
 
-            pendingNotification = new RelationshipActionResultEvent
-            {
-                UserAId = @event.SwiperUserId,
-                UserBId = @event.SwipedUserId,
-                Type = RelationshipNotificationType.NewMatch,
-                MatchMode = @event.MatchMode
-            };
+                // Match Notification: Trigger only on first creation
+                pendingNotification = new RelationshipActionResultEvent
+                {
+                    UserAId = @event.SwipedUserId, // Target always gets notification
+                    UserBId = @event.IsMatch ? null : @event.SwiperUserId, // Swiper only gets notif if it was a DB-discovered match
+                    Type = RelationshipNotificationType.NewMatch,
+                    MatchMode = @event.MatchMode
+                };
+            }
         }
 
         try
         {
-            await context.SaveChangesAsync();
+            if (context.ChangeTracker.HasChanges())
+            {
+                await context.SaveChangesAsync();
+            }
             
             // Push notification only AFTER successful database commit
             if (pendingNotification != null)
