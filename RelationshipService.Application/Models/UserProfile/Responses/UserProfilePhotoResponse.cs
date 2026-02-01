@@ -6,4 +6,5 @@ public class UserProfilePhotoResponse
     public string PhotoUrl { get; set; }
     public bool IsMain { get; set; }
     public int Order { get; set; }
+    public bool IsBlurred { get; set; }
 }

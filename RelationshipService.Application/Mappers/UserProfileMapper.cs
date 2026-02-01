@@ -81,11 +81,6 @@ public static class UserProfileMapper
             DiscoveryToken = tokenService.GenerateToken(swiperId, profile.UserId, profile.Mode, profile.SubscriptionPlan)
         };
 
-
-
-
-
-
         return discoveryResponse;
     }
 }

@@ -7,14 +7,20 @@ using RelationshipService.Application.Models.Swipe.Responses;
 using RelationshipService.Application.ServiceContracts;
 using RelationshipService.Domain.Enums;
 using StackExchange.Redis;
+using Microsoft.EntityFrameworkCore;
+using RelationshipService.Application;
+using RelationshipService.Application.Mappers;
+using RelationshipService.Application.Models.UserProfile.Responses;
 
 namespace RelationshipService.Application.Services;
 
+public class SwipeService(
 public class SwipeService(
     IDiscoveryTokenService tokenService,
     IConnectionMultiplexer redis,
     IPublishEndpoint publishEndpoint,
     IConfiguration configuration,
+    IRelationShipDbContext context,
     ILogger<SwipeService> logger) : ISwipeService
 {
     private readonly IDatabase _db = redis.GetDatabase();
@@ -120,6 +126,95 @@ public class SwipeService(
             SwipeType = isMatch ? request.SwipeType : null,
             MatchedSwipeType = isMatch ? (SwipeType?)oppositeTypeFromRedis : null
         };
+    }
+
+    public async Task<List<UserProfileResponse>> GetLikersAsync(int userId)
+    {
+        // 0. Get User's current Mode and Plan
+        var userProps = await context.UserProfiles
+            .AsNoTracking()
+            .Where(u => u.UserId == userId)
+            .Select(u => new { u.Mode, u.SubscriptionPlan })
+            .FirstOrDefaultAsync();
+
+        if (userProps == null) return new List<UserProfileResponse>();
+
+        // 1. Get IDs of users who liked me in this mode
+        var likerIds = await context.Swipes
+            .AsNoTracking()
+            .Where(s => s.SwipedUserId == userId 
+                     && s.SwipeType != SwipeType.Dislike 
+                     && s.Mode == userProps.Mode)
+            .Select(s => s.SwiperUserId)
+            .Distinct()
+            .ToListAsync();
+
+        if (!likerIds.Any())
+            return new List<UserProfileResponse>();
+
+        // 2. exclude matches (or any interaction from me to them)
+        // If I also swiped them (Like or Dislike), I shouldn't see them in "Liked Me"
+        var myInteractions = await context.Swipes
+            .AsNoTracking()
+            .Where(s => s.SwiperUserId == userId 
+                     && likerIds.Contains(s.SwipedUserId) 
+                     && s.Mode == userProps.Mode)
+            .Select(s => s.SwipedUserId)
+            .ToListAsync();
+
+        var pendingIds = likerIds.Except(myInteractions).ToList();
+
+        if (!pendingIds.Any())
+            return new List<UserProfileResponse>();
+
+        // 3. Load profiles
+        var profiles = await context.UserProfiles
+            .AsNoTracking()
+            .Include(p => p.ProfilePhotos)
+            .Include(p => p.Hobbies)
+            .Include(p => p.UserProfileAnswers)
+                .ThenInclude(a => a.QuestionAnswer)
+                    .ThenInclude(qa => qa.Question)
+            .Include(p => p.Preferences)
+            .Where(p => pendingIds.Contains(p.UserId))
+            .ToListAsync();
+
+        var response = profiles.Select(p => p.ToResponse()).ToList();
+
+        // Filter to show only main photo for all users
+        foreach (var profile in response)
+        {
+            if (profile.ProfilePhotos != null && profile.ProfilePhotos.Any())
+            {
+                var mainPhoto = profile.ProfilePhotos.FirstOrDefault(p => p.IsMain);
+                profile.ProfilePhotos = mainPhoto != null 
+                    ? new List<Application.Models.UserProfile.Responses.UserProfilePhotoResponse> { mainPhoto }
+                    : new List<Application.Models.UserProfile.Responses.UserProfilePhotoResponse>();
+            }
+        }
+
+        // 4. Mask data if user is Free
+        if (userProps.SubscriptionPlan == SubscriptionPlan.Free)
+        {
+            foreach (var profile in response)
+            {
+                profile.Name = "*****";
+                profile.Bio = "*****";
+                profile.Hobbies = new List<Application.Models.Hobby.Responses.HobbyResponse>();
+                profile.UserProfileAnswers = new List<Application.Models.UserProfile.Responses.UserProfileAnswerResponse>();
+                
+                // Set blur flag for the main photo
+                if (profile.ProfilePhotos != null && profile.ProfilePhotos.Any())
+                {
+                    foreach (var photo in profile.ProfilePhotos)
+                    {
+                        photo.IsBlurred = true;
+                    }
+                }
+            }
+        }
+
+        return response;
     }
 
     private async Task<(RedisSwipeStatus Status, bool IsMatch, int OppositeSwipeType, bool TargetFound)> ExecuteSwipeScript(

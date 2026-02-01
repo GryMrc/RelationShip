@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
 using RelationshipService.Application.Models.Swipe.Requests;
 using RelationshipService.Application.ServiceContracts;
+using RelationshipService.Domain.Enums;
 
 namespace RelationshipService.Api.Controller.v1;
 
@@ -12,6 +13,13 @@ public class SwipeController(ISwipeService swipeService) : BaseController
     public async Task<IActionResult> Post(SwipeRequest request)
     {
         var response = await swipeService.SwipeAsync(UserId, request);
+        return Ok(response);
+    }
+
+    [HttpGet("likers")]
+    public async Task<IActionResult> GetLikers()
+    {
+        var response = await swipeService.GetLikersAsync(UserId);
         return Ok(response);
     }
 }
