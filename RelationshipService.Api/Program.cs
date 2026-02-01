@@ -8,6 +8,7 @@ using StackExchange.Redis;
 using MassTransit;
 using RelationshipService.Application.Consumers;
 using RelationshipService.Application.Events;
+using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,8 +55,6 @@ builder.Services.AddOpenApi(options =>
 });
 builder.Services.AddControllers();
 
-if (builder.Environment.IsDevelopment())
-{
     builder.Services.AddCors(options =>
     {
         options.AddDefaultPolicy(policy =>
@@ -65,7 +64,9 @@ if (builder.Environment.IsDevelopment())
                   .AllowAnyMethod();
         });
     });
-}
+
+
+builder.Services.AddValidatorsFromAssembly(System.Reflection.Assembly.Load("RelationshipService.Application"));
 
 builder.Services.AddApiVersioning(options =>
 {
@@ -150,6 +151,7 @@ builder.Services.AddScoped<IHobbyService, HobbyService>();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IDiscoveryTokenService, DiscoveryTokenService>();
 builder.Services.AddScoped<ISwipeService, SwipeService>();
+builder.Services.AddScoped<IMatchService, MatchService>();
 
 
 var app = builder.Build();
