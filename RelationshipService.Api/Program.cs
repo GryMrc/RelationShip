@@ -7,6 +7,7 @@ using Scalar.AspNetCore;
 using StackExchange.Redis;
 using MassTransit;
 using RelationshipService.Application.Consumers;
+using RelationshipService.Application.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -98,16 +99,34 @@ builder.Services.AddMassTransit(x =>
     x.UsingRabbitMq((context, cfg) =>
     {
         cfg.Host("localhost", "/");
-        
-        // Retry Policy: Exponential backoff to handle transient DB/Network issues
-        cfg.UseMessageRetry(r => r.Exponential(
-            3,                          // retry count
-            TimeSpan.FromSeconds(2),    // min interval
-            TimeSpan.FromSeconds(10),   // max interval
-            TimeSpan.FromSeconds(2)     // interval delta
-        ));
 
-        cfg.ConfigureEndpoints(context);
+        // Enable Topic Exchange for refined routing
+        cfg.Publish<SwipeEvent>(p => p.ExchangeType = "topic");
+
+        // 1. Isolated Queue for Date Mode
+        cfg.ReceiveEndpoint("swipe-date-queue", e =>
+        {
+            e.ConfigureConsumer<SwipeConsumer>(context);
+            e.Bind("RelationshipService.Application.Events:SwipeEvent", b =>
+            {
+                b.RoutingKey = "date";
+                b.ExchangeType = "topic";
+            });
+        });
+
+        // 2. Isolated Queue for BFF Mode
+        cfg.ReceiveEndpoint("swipe-bff-queue", e =>
+        {
+            e.ConfigureConsumer<SwipeConsumer>(context);
+            e.Bind("RelationshipService.Application.Events:SwipeEvent", b =>
+            {
+                b.RoutingKey = "bff";
+                b.ExchangeType = "topic";
+            });
+        });
+
+        // Retry Policy
+        cfg.UseMessageRetry(r => r.Exponential(3, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(2)));
     });
 });
 

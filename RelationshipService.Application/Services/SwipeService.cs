@@ -108,6 +108,10 @@ public class SwipeService(
             Mode = request.Mode,
             IsRedisMatch = isMatch,
             OppositeSwipeType = oppositeTypeFromRedis
+        }, context => 
+        {
+            // Sharding: Set routing key to isolation by mode at RabbitMQ level
+            context.SetRoutingKey(request.Mode.ToString().ToLower());
         });
 
         return new SwipeResponse 
