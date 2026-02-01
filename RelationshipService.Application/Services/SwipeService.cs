@@ -8,13 +8,11 @@ using RelationshipService.Application.ServiceContracts;
 using RelationshipService.Domain.Enums;
 using StackExchange.Redis;
 using Microsoft.EntityFrameworkCore;
-using RelationshipService.Application;
 using RelationshipService.Application.Mappers;
 using RelationshipService.Application.Models.UserProfile.Responses;
 
 namespace RelationshipService.Application.Services;
 
-public class SwipeService(
 public class SwipeService(
     IDiscoveryTokenService tokenService,
     IConnectionMultiplexer redis,

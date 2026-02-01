@@ -55,6 +55,8 @@ builder.Services.AddOpenApi(options =>
 });
 builder.Services.AddControllers();
 
+if (builder.Environment.IsDevelopment())
+{
     builder.Services.AddCors(options =>
     {
         options.AddDefaultPolicy(policy =>
@@ -64,7 +66,7 @@ builder.Services.AddControllers();
                   .AllowAnyMethod();
         });
     });
-
+}
 
 builder.Services.AddValidatorsFromAssembly(System.Reflection.Assembly.Load("RelationshipService.Application"));
 
@@ -131,7 +133,6 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
-
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<RelationShipDbContext>(options =>
@@ -152,7 +153,6 @@ builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IDiscoveryTokenService, DiscoveryTokenService>();
 builder.Services.AddScoped<ISwipeService, SwipeService>();
 builder.Services.AddScoped<IMatchService, MatchService>();
-
 
 var app = builder.Build();
 

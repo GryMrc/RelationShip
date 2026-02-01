@@ -18,8 +18,6 @@ public class UserProfileController(IUserProfileService userProfileService) : Bas
         return Ok(profile);
     }
 
-
-
     [HttpGet("all")]
     public async Task<IActionResult> GetAll()
     {
@@ -63,7 +61,6 @@ public class UserProfileController(IUserProfileService userProfileService) : Bas
         var profiles = await userProfileService.GetDiscoveryProfilesAsync(UserId);
         return Ok(profiles);
     }
-
 
     [HttpPut("hobbies")]
     public async Task<IActionResult> SyncHobbies(SyncHobbiesRequest request)
