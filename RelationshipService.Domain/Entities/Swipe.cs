@@ -5,21 +5,11 @@ namespace RelationshipService.Domain.Entities;
 
 public class Swipe : Entity<int>
 {
-    private Swipe() { } // For EF Core
+    public long SwiperProfilId { get; set; }
 
-    public Swipe(int swiperUserId, int swipedUserId, SwipeType swipeType, Mode mode)
-    {
-        SwiperUserId = swiperUserId;
-        SwipedUserId = swipedUserId;
-        SwipeType = swipeType;
-        Mode = mode;
-    }
+    public long SwipedProfilId { get; set; }
 
-    public int SwiperUserId { get; private set; }
+    public SwipeType SwipeType { get; set; }
 
-    public int SwipedUserId { get; private set; }
-
-    public SwipeType SwipeType { get; private set; }
-
-    public Mode Mode { get; private set; }
+    public Mode Mode { get; set; }
 }

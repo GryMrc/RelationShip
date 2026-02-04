@@ -4,11 +4,9 @@ namespace RelationshipService.Application.Models.UserProfile.Responses;
 
 public class UserProfileResponse
 {
-    public int UserId { get; set; }
+    public long Id { get; set; }
     public string Name { get; set; }
-
     public string? Bio { get; set; }
-
     public Gender Gender { get; set; }
     public double Latitude { get; set; }
     public double Longitude { get; set; }
@@ -22,7 +20,6 @@ public class UserProfileResponse
     public sbyte MaxDistancePreference { get; set; }
     public byte MinAgePreference { get; set; }
     public byte MaxAgePreference { get; set; }
-    
     public List<Hobby.Responses.HobbyResponse> Hobbies { get; set; }
     public List<UserProfilePhotoResponse> ProfilePhotos { get; set; }
     public List<UserProfileAnswerResponse> UserProfileAnswers { get; set; }

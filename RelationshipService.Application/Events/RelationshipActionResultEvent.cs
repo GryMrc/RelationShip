@@ -12,8 +12,8 @@ public enum RelationshipNotificationType
 
 public class RelationshipActionResultEvent
 {
-    public int UserAId { get; set; }
-    public int? UserBId { get; set; }
+    public long UserAId { get; set; }
+    public long? UserBId { get; set; }
     public RelationshipNotificationType Type { get; set; }
     public Mode Mode { get; init; }
 }

@@ -6,6 +6,6 @@ namespace RelationshipService.Application.ServiceContracts;
 
 public interface IMatchService
 {
-    Task<PaginatedResponse<MatchResponse>> GetMatchesAsync(int userId, GetMatchesRequest request);
-    Task UnmatchAsync(int userId, int matchId, string reason);
+    Task<PaginatedResponse<MatchResponse>> GetMatchesAsync(Guid userId, GetMatchesRequest request);
+    Task UnmatchAsync(Guid userId, int matchId, string reason);
 }

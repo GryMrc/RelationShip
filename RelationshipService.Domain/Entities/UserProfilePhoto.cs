@@ -4,7 +4,7 @@ namespace RelationshipService.Domain.Entities;
 
 public class UserProfilePhoto : Entity<int>
 {
-    public int UserProfileId { get; set; }
+    public long UserProfileId { get; set; }
     public UserProfile UserProfile { get; set; }
     public string PhotoUrl { get; set; }
     public bool IsMain { get; set; }

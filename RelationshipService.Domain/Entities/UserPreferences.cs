@@ -5,7 +5,7 @@ namespace RelationshipService.Domain.Entities;
 
 public class UserPreferences : Entity<int>
 {
-    public int UserProfileId { get; set; }
+    public long UserProfileId { get; set; }
     public UserProfile UserProfile { get; set; }
     public Gender InterestedInGender { get; set; }
     public sbyte MaxDistancePreference { get; set; }

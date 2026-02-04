@@ -6,7 +6,7 @@ namespace RelationshipService.Application.Models.UserProfile.Requests;
 public abstract class UserProfileRequestBase
 {
     [JsonIgnore]
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
     public string Bio { get; set; }
     public byte? Height { get; set; }
     public byte? Weight { get; set; }

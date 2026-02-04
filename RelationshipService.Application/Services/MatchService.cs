@@ -9,19 +9,27 @@ namespace RelationshipService.Application.Services;
 
 public class MatchService(IRelationShipDbContext context) : IMatchService
 {
-    public async Task<PaginatedResponse<MatchResponse>> GetMatchesAsync(int userId, GetMatchesRequest request)
+    public async Task<PaginatedResponse<MatchResponse>> GetMatchesAsync(Guid userId, GetMatchesRequest request)
     {
         // 1. Get current user's mode
-        var currentUserMode = await context.UserProfiles
-            .Where(u => u.Id == userId)
-            .Select(u => u.Mode)
-            .FirstOrDefaultAsync();
+        var currentProfile = await context.UserProfiles
+            .Where(u => u.UserId == userId)
+            .Select(u => new
+            {
+                u.Id,
+                u.Mode
+            }).FirstOrDefaultAsync();
+
+        if (currentProfile == null) 
+        {
+            throw new Exception("User not found");
+        }
 
         // 2. Base Query
         var query = context.Matches
             .AsNoTracking()
-            .Where(m => (m.UserAId == userId || m.UserBId == userId) && 
-                         m.Mode == currentUserMode &&
+            .Where(m => (m.ProfileAId == currentProfile.Id || m.ProfileBId == currentProfile.Id) && 
+                         m.Mode == currentProfile.Mode &&
                          m.MatchStatus == MatchStatus.Active);
 
         // 3. Count
@@ -39,12 +47,12 @@ public class MatchService(IRelationShipDbContext context) : IMatchService
         // 5. Fetch User Details (Including Deleted Users via IgnoreQueryFilters)
         foreach (var match in matches)
         {
-            var targetUserId = match.UserAId == userId ? match.UserBId : match.UserAId;
+            var targetProfilId = match.ProfileAId == currentProfile.Id ? match.ProfileBId : match.ProfileAId;
 
             // We use IgnoreQueryFilters() to get data even if the user is soft-deleted
             var userProfile = await context.UserProfiles
                 .IgnoreQueryFilters() 
-                .Where(u => u.Id == targetUserId)
+                .Where(u => u.Id == targetProfilId)
                 .Select(u => new 
                 {
                     u.Id,
@@ -73,18 +81,21 @@ public class MatchService(IRelationShipDbContext context) : IMatchService
         return new PaginatedResponse<MatchResponse>(matchResponses, totalCount, request.PageIndex, request.PageSize);
     }
 
-    public async Task UnmatchAsync(int userId, int matchId, string reason)
+    public async Task UnmatchAsync(Guid userId, int matchId, string reason)
     {
+        var currentProfile = await context.UserProfiles.FirstOrDefaultAsync(x => x.UserId == userId)
+            ?? throw new Exception("User not found");
+
         var match = await context.Matches.FirstOrDefaultAsync
                                         (m => m.Id == matchId &&     
-                                        (m.UserAId == userId || m.UserBId == userId)) 
+                                        (m.ProfileAId == currentProfile.Id || m.ProfileBId == currentProfile.Id)) 
                                         ?? throw new Exception("Match not found");
 
         if (match.MatchStatus == MatchStatus.Deleted)
             return;
 
         match.MatchStatus = MatchStatus.Deleted;
-        match.DeletedUserId = userId;
+        match.DeletedUserId = currentProfile.Id;
         match.Reason = reason;
         
         await context.SaveChangesAsync();

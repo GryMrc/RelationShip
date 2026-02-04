@@ -6,7 +6,7 @@ namespace RelationshipService.Application.Models.UserPrefences.Requests;
 public class UpdateUserPreferencesRequest
 {
     [JsonIgnore]
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
     public Gender InterestedInGender { get; set; }
     public sbyte MaxDistancePreference { get; set; }
     public byte MinAgePreference { get; set; }

@@ -4,9 +4,9 @@ using NetTopologySuite.Geometries;
 
 namespace RelationshipService.Domain.Entities
 {
-    public class UserProfile : Entity<int>
+    public class UserProfile : Entity<long>
     {
-        public int UserId { get; set; }
+        public Guid UserId { get; set; }
         public string Name { get; set; }
         public string? Bio { get; set; }
         public List<Hobby> Hobbies { get; set; }

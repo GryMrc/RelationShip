@@ -14,7 +14,6 @@ public static class UserProfileMapper
     {
         return new UserProfileResponse
         {
-            UserId = profile.UserId,
             Name = profile.Name,
             Bio = profile.Bio,
             Gender = profile.Gender,
@@ -53,13 +52,13 @@ public static class UserProfileMapper
         };
     }
 
-    public static DiscoveryProfileResponse ToDiscoveryResponse(this UserProfile profile, int swiperId, IDiscoveryTokenService tokenService)
+    public static DiscoveryProfileResponse ToDiscoveryResponse(this UserProfile profile, Guid swiperId, IDiscoveryTokenService tokenService)
     {
         var response = profile.ToResponse(); // Start with base mapping
         
         var discoveryResponse = new DiscoveryProfileResponse
         {
-            UserId = response.UserId,
+            Id = response.Id,
             Name = response.Name,
             Bio = response.Bio,
             Gender = response.Gender,
@@ -78,7 +77,7 @@ public static class UserProfileMapper
             Hobbies = response.Hobbies,
             ProfilePhotos = response.ProfilePhotos,
             UserProfileAnswers = response.UserProfileAnswers,
-            DiscoveryToken = tokenService.GenerateToken(swiperId, profile.UserId, profile.Mode, profile.SubscriptionPlan)
+            DiscoveryToken = tokenService.GenerateToken(swiperId, profile.Id, profile.Mode, profile.SubscriptionPlan)
         };
 
         return discoveryResponse;

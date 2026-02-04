@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
 using RelationshipService.Application.Models.Swipe.Requests;
 using RelationshipService.Application.ServiceContracts;
-using RelationshipService.Domain.Enums;
 
 namespace RelationshipService.Api.Controller.v1;
 

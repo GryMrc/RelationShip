@@ -9,7 +9,7 @@ public class DiscoveryTokenService : IDiscoveryTokenService
 {
     private const string SecretKey = "your-very-secure-secret-key-change-me-later";
 
-    public string GenerateToken(int swiperId, int swipedId, Mode mode, SubscriptionPlan plan)
+    public string GenerateToken(Guid swiperId, long swipedId, Mode mode, SubscriptionPlan plan)
     {
         var expiry = DateTime.UtcNow.AddHours(24).Ticks;
         var payload = $"{swiperId}:{swipedId}:{(int)mode}:{(int)plan}:{expiry}";
@@ -22,7 +22,7 @@ public class DiscoveryTokenService : IDiscoveryTokenService
         return $"{Convert.ToBase64String(Encoding.UTF8.GetBytes(payload))}.{signature}";
     }
 
-    public bool ValidateToken(int swiperId, int swipedId, Mode mode, string token, out SubscriptionPlan plan)
+    public bool ValidateToken(Guid swiperId, long swipedId, Mode mode, string token, out SubscriptionPlan plan)
     {
         plan = SubscriptionPlan.Free;
         try
@@ -37,8 +37,8 @@ public class DiscoveryTokenService : IDiscoveryTokenService
             var payloadParts = payload.Split(':');
             if (payloadParts.Length != 5) return false;
 
-            if (!int.TryParse(payloadParts[0], out var tokenSwiperId) || tokenSwiperId != swiperId) return false;
-            if (!int.TryParse(payloadParts[1], out var tokenSwipedId) || tokenSwipedId != swipedId) return false;
+            if (!Guid.TryParse(payloadParts[0], out var tokenSwiperId) || tokenSwiperId != swiperId) return false;
+            if (!long.TryParse(payloadParts[1], out var tokenSwipedId) || tokenSwipedId != swipedId) return false;
             if (!int.TryParse(payloadParts[2], out var tokenMode) || tokenMode != (int)mode) return false;
             if (!int.TryParse(payloadParts[3], out var tokenPlan)) return false;
             if (!long.TryParse(payloadParts[4], out var expiryTicks)) return false;

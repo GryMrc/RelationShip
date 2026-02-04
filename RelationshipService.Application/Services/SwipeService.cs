@@ -10,6 +10,7 @@ using StackExchange.Redis;
 using Microsoft.EntityFrameworkCore;
 using RelationshipService.Application.Mappers;
 using RelationshipService.Application.Models.UserProfile.Responses;
+using RelationshipService.Application.Models.Hobby.Responses;
 
 namespace RelationshipService.Application.Services;
 
@@ -67,7 +68,7 @@ public class SwipeService(
         end
         return {0, isMatch, matchedType, targetFound}";
 
-    public async Task<SwipeResponse> SwipeAsync(int swiperId, SwipeRequest request)
+    public async Task<SwipeResponse> SwipeAsync(Guid swiperId, SwipeRequest request)
     {
         // 1. Validate Token (Quick cryptographic check)
         if (!tokenService.ValidateToken(swiperId, request.TargetUserId, request.Mode, request.DiscoveryToken, out var plan))
@@ -106,8 +107,8 @@ public class SwipeService(
         // 5. Fire and Forget to Consumer
         await publishEndpoint.Publish(new SwipeEvent
         {
-            SwiperUserId = swiperId,
-            SwipedUserId = request.TargetUserId,
+            SwiperId = swiperId,
+            SwipedProfilId = request.TargetUserId,
             SwipeType = request.SwipeType,
             Mode = request.Mode,
             IsRedisMatch = isMatch,
@@ -126,24 +127,25 @@ public class SwipeService(
         };
     }
 
-    public async Task<List<UserProfileResponse>> GetLikersAsync(int userId)
+    public async Task<List<UserProfileResponse>> GetLikersAsync(Guid userId)
     {
         // 0. Get User's current Mode and Plan
         var userProps = await context.UserProfiles
             .AsNoTracking()
             .Where(u => u.UserId == userId)
-            .Select(u => new { u.Mode, u.SubscriptionPlan })
-            .FirstOrDefaultAsync();
+            .Select(u => new { u.Mode, u.SubscriptionPlan, u.Id })
+            .FirstOrDefaultAsync()
+            ?? throw new Exception("User Not Found");
 
         if (userProps == null) return new List<UserProfileResponse>();
 
         // 1. Get IDs of users who liked me in this mode
         var likerIds = await context.Swipes
             .AsNoTracking()
-            .Where(s => s.SwipedUserId == userId 
+            .Where(s => s.SwipedProfilId == userProps.Id 
                      && s.SwipeType != SwipeType.Dislike 
                      && s.Mode == userProps.Mode)
-            .Select(s => s.SwiperUserId)
+            .Select(s => s.SwiperProfilId)
             .Distinct()
             .ToListAsync();
 
@@ -154,10 +156,10 @@ public class SwipeService(
         // If I also swiped them (Like or Dislike), I shouldn't see them in "Liked Me"
         var myInteractions = await context.Swipes
             .AsNoTracking()
-            .Where(s => s.SwiperUserId == userId 
-                     && likerIds.Contains(s.SwipedUserId) 
+            .Where(s => s.SwiperProfilId == userProps.Id 
+                     && likerIds.Contains(s.SwipedProfilId) 
                      && s.Mode == userProps.Mode)
-            .Select(s => s.SwipedUserId)
+            .Select(s => s.SwipedProfilId)
             .ToListAsync();
 
         var pendingIds = likerIds.Except(myInteractions).ToList();
@@ -174,7 +176,7 @@ public class SwipeService(
                 .ThenInclude(a => a.QuestionAnswer)
                     .ThenInclude(qa => qa.Question)
             .Include(p => p.Preferences)
-            .Where(p => pendingIds.Contains(p.UserId))
+            .Where(p => pendingIds.Contains(p.Id))
             .ToListAsync();
 
         var response = profiles.Select(p => p.ToResponse()).ToList();
@@ -186,8 +188,8 @@ public class SwipeService(
             {
                 var mainPhoto = profile.ProfilePhotos.FirstOrDefault(p => p.IsMain);
                 profile.ProfilePhotos = mainPhoto != null 
-                    ? new List<Application.Models.UserProfile.Responses.UserProfilePhotoResponse> { mainPhoto }
-                    : new List<Application.Models.UserProfile.Responses.UserProfilePhotoResponse>();
+                    ? new List<UserProfilePhotoResponse> { mainPhoto }
+                    : new List<UserProfilePhotoResponse>();
             }
         }
 
@@ -198,8 +200,8 @@ public class SwipeService(
             {
                 profile.Name = "*****";
                 profile.Bio = "*****";
-                profile.Hobbies = new List<Application.Models.Hobby.Responses.HobbyResponse>();
-                profile.UserProfileAnswers = new List<Application.Models.UserProfile.Responses.UserProfileAnswerResponse>();
+                profile.Hobbies = new List<HobbyResponse>();
+                profile.UserProfileAnswers = new List<UserProfileAnswerResponse>();
                 
                 // Set blur flag for the main photo
                 if (profile.ProfilePhotos != null && profile.ProfilePhotos.Any())
@@ -216,7 +218,7 @@ public class SwipeService(
     }
 
     private async Task<(RedisSwipeStatus Status, bool IsMatch, int OppositeSwipeType, bool TargetFound)> ExecuteSwipeScript(
-        int limit, string today, int swiperId, SwipeRequest request)
+        int limit, string today, Guid swiperId, SwipeRequest request)
     {
         var limitKey = $"user:{swiperId}:swipe-count:{today}";
         var swipeKey = $"user:{swiperId}:swipes:{(int)request.Mode}";

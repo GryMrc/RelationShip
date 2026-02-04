@@ -13,7 +13,7 @@ public class UserLocationHistoryConfiguration : IEntityTypeConfiguration<UserLoc
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("id");
 
-        builder.Property(x => x.UserId).HasColumnName("user_id").IsRequired();
+        builder.Property(x => x.UserProfileId).HasColumnName("user_profil_id").IsRequired();
         builder.Property(x => x.Latitude).HasColumnName("latitude").HasMaxLength(50).IsRequired();
         builder.Property(x => x.Longitude).HasColumnName("longitude").HasMaxLength(50).IsRequired();
     }

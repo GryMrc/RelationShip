@@ -16,32 +16,51 @@ public class SwipeConsumer(IRelationShipDbContext context, ILogger<SwipeConsumer
         bool isDbMatch = false;
         RelationshipActionResultEvent? pendingNotification = null;
 
+        var currentProfile = context.UserProfiles.FirstOrDefault(x => x.UserId == @event.SwiperId);
+
+        if (currentProfile is null)
+        {
+            return;
+        }
+
         // 1. Fetch relevant swipes (Own and Reciprocal) in one go
         var swipes = await context.Swipes
             .AsNoTracking()
-            .Where(s => ((s.SwiperUserId == @event.SwiperUserId && s.SwipedUserId == @event.SwipedUserId) ||
-                         (s.SwiperUserId == @event.SwipedUserId && s.SwipedUserId == @event.SwiperUserId)) &&
+            .Where(s => ((s.SwiperProfilId == currentProfile.Id && s.SwipedProfilId == @event.SwipedProfilId) ||
+                         (s.SwiperProfilId == @event.SwipedProfilId && s.SwipedProfilId == currentProfile.Id)) &&
                         s.Mode == @event.Mode)
             .ToListAsync();
 
-        var existingSwipe = swipes.FirstOrDefault(s => s.SwiperUserId == @event.SwiperUserId);
+        var existingSwipe = swipes.FirstOrDefault(s => s.SwiperProfilId == currentProfile.Id);
         
         // Use Redis-discovered opposite swipe if available, otherwise fallback to DB result
         Swipe? oppositeSwipe = null;
         if (@event.OppositeSwipeType.HasValue)
         {
             // Create a dummy object to hold the swipe type discovered in Redis
-            oppositeSwipe = new Swipe(@event.SwipedUserId, @event.SwiperUserId, (SwipeType)@event.OppositeSwipeType.Value, @event.Mode);
+            oppositeSwipe = new Swipe 
+            {
+               SwipedProfilId = @event.SwipedProfilId, 
+               SwiperProfilId = currentProfile.Id, 
+               SwipeType = (SwipeType)@event.OppositeSwipeType.Value, 
+               Mode = @event.Mode 
+            };
         }
         else
         {
-            oppositeSwipe = swipes.FirstOrDefault(s => s.SwiperUserId == @event.SwipedUserId);
+            oppositeSwipe = swipes.FirstOrDefault(s => s.SwiperProfilId == @event.SwipedProfilId);
         }
         
         bool isNewSwipe = existingSwipe == null;
         if (isNewSwipe)
         {
-            context.Swipes.Add(new Swipe(@event.SwiperUserId, @event.SwipedUserId, @event.SwipeType, @event.Mode));
+            context.Swipes.Add(new Swipe 
+            {
+               SwipedProfilId = @event.SwipedProfilId, 
+               SwiperProfilId = currentProfile.Id, 
+               SwipeType = @event.SwipeType, 
+               Mode = @event.Mode 
+            });
         }
 
         // 2. Definitive Match Check
@@ -64,7 +83,7 @@ public class SwipeConsumer(IRelationShipDbContext context, ILogger<SwipeConsumer
             {
                 pendingNotification = new RelationshipActionResultEvent
                 {
-                    UserAId = @event.SwipedUserId,
+                    UserAId = @event.SwipedProfilId,
                     UserBId = null,
                     Type = RelationshipNotificationType.NewLike,
                     Mode = @event.Mode
@@ -75,7 +94,7 @@ public class SwipeConsumer(IRelationShipDbContext context, ILogger<SwipeConsumer
             {
                 pendingNotification = new RelationshipActionResultEvent
                 {
-                    UserAId = @event.SwiperUserId,
+                    UserAId = currentProfile.Id,
                     UserBId = null,
                     Type = RelationshipNotificationType.MissedMatch,
                     Mode = @event.Mode
@@ -88,28 +107,30 @@ public class SwipeConsumer(IRelationShipDbContext context, ILogger<SwipeConsumer
             // We double-verify here just in case, though isMatch should already be false if Dislike
             if (@event.SwipeType == SwipeType.Dislike) return; 
 
-            var userAId = Math.Min(@event.SwiperUserId, @event.SwipedUserId);
-            var userBId = Math.Max(@event.SwiperUserId, @event.SwipedUserId);
+            var userAId = Math.Min(currentProfile.Id, @event.SwipedProfilId);
+            var userBId = Math.Max(currentProfile.Id, @event.SwipedProfilId);
 
             var alreadyMatched = await context.Matches
                 .AsNoTracking()
-                .AnyAsync(m => m.UserAId == userAId && m.UserBId == userBId);
+                .AnyAsync(m => m.ProfileAId == userAId && m.ProfileBId == userBId);
 
             if (!alreadyMatched)
             {
-                var match = new Match(
-                    userAId,
-                    userBId,
-                    @event.Mode
-                );
+                var match = new Match
+                {
+                    ProfileAId = userAId,
+                    ProfileBId = userBId,
+                    Mode = @event.Mode,
+                    MatchStatus = MatchStatus.Active
+                };
 
                 context.Matches.Add(match);
 
                 // Match Notification: Trigger only on first creation
                 pendingNotification = new RelationshipActionResultEvent
                 {
-                    UserAId = @event.SwipedUserId, // Target always gets notification
-                    UserBId = @event.IsRedisMatch ? null : @event.SwiperUserId, // Swiper only gets notif if it was a DB-discovered match
+                    UserAId = @event.SwipedProfilId, // Target always gets notification
+                    UserBId = @event.IsRedisMatch ? null : currentProfile.Id, // Swiper only gets notif if it was a DB-discovered match
                     Type = RelationshipNotificationType.NewMatch,
                     Mode = @event.Mode
                 };
@@ -153,8 +174,8 @@ public class SwipeConsumer(IRelationShipDbContext context, ILogger<SwipeConsumer
                         pendingNotification.UserAId,
                         pendingNotification.UserBId,
                         pendingNotification.Mode,
-                        @event.SwiperUserId,
-                        @event.SwipedUserId);
+                        @event.SwiperId,
+                        @event.SwipedProfilId);
 
                     // Note: We don't throw here because:
                     // 1. DB transaction already committed - can't rollback
@@ -170,8 +191,8 @@ public class SwipeConsumer(IRelationShipDbContext context, ILogger<SwipeConsumer
             logger.LogInformation(
                 "Duplicate swipe detected (unique constraint violation). SwiperUserId: {SwiperUserId}, SwipedUserId: {SwipedUserId}. " +
                 "This is expected during retries or concurrent processing.",
-                @event.SwiperUserId,
-                @event.SwipedUserId);
+                @event.SwiperId,
+                @event.SwipedProfilId);
         }
     }
 }

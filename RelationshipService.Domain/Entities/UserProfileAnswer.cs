@@ -4,7 +4,7 @@ public class UserProfileAnswer
 {
     public int Id { get; set; }
 
-    public int UserProfileId { get; set; }
+    public long UserProfileId { get; set; }
 
     public UserProfile UserProfile { get; set; }
 

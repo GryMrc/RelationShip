@@ -6,15 +6,15 @@ namespace RelationshipService.Api.Controller;
 [Route("api/v{version:apiVersion}/[controller]")]
 public class BaseController : ControllerBase
 {
-    protected int UserId
+    protected Guid UserId
     {
         get
         {
-            if (Request.Headers.TryGetValue("X-User-Id", out var userIdStr) && int.TryParse(userIdStr, out var userId))
+            if (Request.Headers.TryGetValue("X-User-Id", out var userIdStr) && Guid.TryParse(userIdStr, out var userId))
             {
                 return userId;
             }
-            return 0;
+            return Guid.Empty;
         }
     }
 }

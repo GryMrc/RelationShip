@@ -4,8 +4,8 @@ namespace RelationshipService.Application.ServiceContracts;
 
 public interface IDiscoveryTokenService
 {
-    string GenerateToken(int swiperId, int swipedId, Mode mode, SubscriptionPlan plan);
-    bool ValidateToken(int swiperId, int swipedId, Mode mode, string token, out SubscriptionPlan plan);
+    string GenerateToken(Guid swiperId, long swipedId, Mode mode, SubscriptionPlan plan);
+    bool ValidateToken(Guid swiperId, long swipedId, Mode mode, string token, out SubscriptionPlan plan);
 }
 
 

@@ -13,13 +13,13 @@ public class SwipeConfiguration : IEntityTypeConfiguration<Swipe>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("id");
 
-        builder.Property(x => x.SwiperUserId).HasColumnName("swiper_user_id").IsRequired();
-        builder.Property(x => x.SwipedUserId).HasColumnName("swiped_user_id").IsRequired();
+        builder.Property(x => x.SwiperProfilId).HasColumnName("swiper_user_id").IsRequired();
+        builder.Property(x => x.SwipedProfilId).HasColumnName("swiped_user_id").IsRequired();
         builder.Property(x => x.SwipeType).HasColumnName("swipe_type").IsRequired();
         builder.Property(x => x.Mode).HasColumnName("mode").IsRequired();
 
         // Indexes for performance
-        builder.HasIndex(x => new { x.SwiperUserId, x.SwipedUserId, x.Mode }).IsUnique().HasDatabaseName("idx_swipes_swiper_swiped_mode_unique");
-        builder.HasIndex(x => new { x.SwipedUserId, x.SwiperUserId, x.Mode }).HasDatabaseName("idx_swipes_swiped_swiper_mode");
+        builder.HasIndex(x => new { x.SwiperProfilId, x.SwipedProfilId, x.Mode }).IsUnique().HasDatabaseName("idx_swipes_swiper_swiped_mode_unique");
+        builder.HasIndex(x => new { x.SwipedProfilId, x.SwiperProfilId, x.Mode }).HasDatabaseName("idx_swipes_swiped_swiper_mode");
     }
 }

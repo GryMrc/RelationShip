@@ -14,7 +14,7 @@ public class UserProfileService(
     IDiscoveryTokenService tokenService) : IUserProfileService
 {
 
-    public async Task<UserProfileResponse?> GetByUserIdAsync(int userId)
+    public async Task<UserProfileResponse?> GetByUserIdAsync(Guid userId)
     {
         var profile = await context.UserProfiles
             .AsNoTracking()
@@ -44,7 +44,7 @@ public class UserProfileService(
         return profiles.Select(p => p.ToResponse()).ToList();
     }
 
-    public async Task<int> CreateAsync(CreateUserProfileRequest request)
+    public async Task CreateAsync(CreateUserProfileRequest request)
     {
         var user = await context.UserProfiles
             .AsNoTracking()
@@ -68,8 +68,6 @@ public class UserProfileService(
 
         context.UserProfiles.Add(profile);
         await context.SaveChangesAsync();
-
-        return profile.Id;
     }
 
     public async Task UpdateAsync(UpdateUserProfileRequest request)
@@ -89,7 +87,7 @@ public class UserProfileService(
         await context.SaveChangesAsync();
     }
 
-    public async Task DeleteAsync(int userId)
+    public async Task DeleteAsync(Guid userId)
     {
         var profile = await context.UserProfiles
             .FirstOrDefaultAsync(x => x.UserId == userId && !x.IsDeleted);
@@ -100,19 +98,19 @@ public class UserProfileService(
         await context.SaveChangesAsync();
     }
 
-    public async Task<List<DiscoveryProfileResponse>> GetDiscoveryProfilesAsync(int userId)
+    public async Task<List<DiscoveryProfileResponse>> GetDiscoveryProfilesAsync(Guid userId)
     {
         var currentUser = await context.UserProfiles
             .AsNoTracking()
             .Include(x => x.Preferences)
-            .FirstOrDefaultAsync(x => x.UserId == userId && !x.IsDeleted);
+            .FirstOrDefaultAsync(x => x.UserId == userId);
 
         if (currentUser == null || currentUser.Preferences == null)
             return new List<DiscoveryProfileResponse>();
 
         var swipedUserIds = await context.Swipes
-            .Where(s => s.SwiperUserId == userId)
-            .Select(s => s.SwipedUserId)
+            .Where(s => s.SwiperProfilId == currentUser.Id)
+            .Select(s => s.SwipedProfilId)
             .ToListAsync();
 
         var today = DateTime.UtcNow;
@@ -129,7 +127,7 @@ public class UserProfileService(
                 .ThenInclude(x => x.QuestionAnswer)
                     .ThenInclude(x => x.Question)
             .Where(p => p.UserId != userId && !p.IsDeleted)
-            .Where(p => !swipedUserIds.Contains(p.UserId))
+            .Where(p => !swipedUserIds.Contains(p.Id))
             .Where(p => p.Gender == currentUser.Preferences.InterestedInGender)
             .Where(p => p.Mode == currentUser.Mode) // Same world filter (Optimized: No JOIN)
             .Where(p => p.DateOfBirth >= minBirthDate && p.DateOfBirth <= maxBirthDate)
@@ -143,7 +141,7 @@ public class UserProfileService(
 
 
 
-    public async Task SyncHobbiesAsync(int userId, SyncHobbiesRequest request)
+    public async Task SyncHobbiesAsync(Guid userId, SyncHobbiesRequest request)
     {
         var profile = await context.UserProfiles
             .Include(x => x.Hobbies)
@@ -164,7 +162,7 @@ public class UserProfileService(
         await context.SaveChangesAsync();
     }
 
-    public async Task SyncAnswersAsync(int userId, SyncAnswersRequest request)
+    public async Task SyncAnswersAsync(Guid userId, SyncAnswersRequest request)
     {
         var profile = await context.UserProfiles
             .Include(x => x.UserProfileAnswers)
@@ -183,7 +181,7 @@ public class UserProfileService(
         await context.SaveChangesAsync();
     }
 
-    public async Task AddPhotoAsync(int userId, AddPhotoRequest request)
+    public async Task AddPhotoAsync(Guid userId, AddPhotoRequest request)
     {
         var profile = await context.UserProfiles.FirstOrDefaultAsync(x => x.UserId == userId);
         if (profile == null) throw new Exception("Profile not found");
@@ -200,7 +198,7 @@ public class UserProfileService(
         await context.SaveChangesAsync();
     }
 
-    public async Task DeletePhotoAsync(int userId, int photoId)
+    public async Task DeletePhotoAsync(Guid userId, int photoId)
     {
         var photo = await context.UserProfilePhotos
             .FirstOrDefaultAsync(x => x.Id == photoId && x.UserProfile.UserId == userId);
@@ -211,7 +209,7 @@ public class UserProfileService(
         await context.SaveChangesAsync();
     }
 
-    public async Task SetMainPhotoAsync(int userId, int photoId)
+    public async Task SetMainPhotoAsync(Guid userId, int photoId)
     {
         var photos = await context.UserProfilePhotos
             .Where(x => x.UserProfile.UserId == userId)
