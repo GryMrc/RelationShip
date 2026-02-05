@@ -1,16 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RelationshipService.Domain.Entities;
 using RelationshipService.Domain.Enums;
 
 namespace RelationshipService.Infra.EntityTypeConfigurations;
 
-public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
+public class UserProfileConfiguration : IEntityTypeConfiguration<Profile>
 {
-    public void Configure(EntityTypeBuilder<UserProfile> builder)
+    public void Configure(EntityTypeBuilder<Profile> builder)
     {
-        builder.ToTable("user_profiles");
+        builder.ToTable("profiles");
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("id");
@@ -45,24 +44,24 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
         builder.HasIndex(x => x.DateOfBirth)
                .HasDatabaseName("IX_UserProfile_AgeFilter");
 
-        builder.HasMany(x => x.ProfilePhotos)
-            .WithOne(x => x.UserProfile)
-            .HasForeignKey(x => x.UserProfileId)
+        builder.HasMany(x => x.Photos)
+            .WithOne(x => x.Profile)
+            .HasForeignKey(x => x.ProfileId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasMany(x => x.UserProfileAnswers)
-            .WithOne(x => x.UserProfile)
-            .HasForeignKey(x => x.UserProfileId)
+        builder.HasMany(x => x.Answers)
+            .WithOne(x => x.Profile)
+            .HasForeignKey(x => x.ProfileId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(x => x.Hobbies)
             .WithMany()
-            .UsingEntity<UserProfileHobby>(
+            .UsingEntity<ProfileHobby>(
                 j =>
                 {
-                    j.ToTable("user_profile_hobbies");
-                    j.HasKey(t => new { t.UserProfileId, t.HobbyId });
-                    j.Property(x => x.UserProfileId).HasColumnName("user_profile_id");
+                    j.ToTable("profile_hobbies");
+                    j.HasKey(t => new { t.ProfileId, t.HobbyId });
+                    j.Property(x => x.ProfileId).HasColumnName("profile_id");
                     j.Property(x => x.HobbyId).HasColumnName("hobby_id");
                 });
     }

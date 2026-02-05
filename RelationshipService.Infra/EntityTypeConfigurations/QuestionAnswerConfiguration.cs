@@ -16,7 +16,7 @@ public class QuestionAnswerConfiguration : IEntityTypeConfiguration<QuestionAnsw
         builder.Property(x => x.QuestionId).HasColumnName("question_id").IsRequired();
         builder.Property(x => x.AnswerText).HasColumnName("answer_text").HasMaxLength(500).IsRequired();
 
-        builder.HasMany(x => x.UserProfileAnswers)
+        builder.HasMany(x => x.ProfileAnswers)
             .WithOne(x => x.QuestionAnswer)
             .HasForeignKey(x => x.QuestionAnswerId)
             .OnDelete(DeleteBehavior.Cascade);

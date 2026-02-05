@@ -10,7 +10,7 @@ namespace RelationshipService.Application.Mappers;
 
 public static class UserProfileMapper
 {
-    public static UserProfileResponse ToResponse(this UserProfile profile)
+    public static UserProfileResponse ToResponse(this Profile profile)
     {
         return new UserProfileResponse
         {
@@ -34,14 +34,14 @@ public static class UserProfileMapper
                 Id = h.Id,
                 Name = h.Name
             }).ToList() ?? new List<HobbyResponse>(),
-            ProfilePhotos = profile.ProfilePhotos?.Select(p => new UserProfilePhotoResponse
+            ProfilePhotos = profile.Photos?.Select(p => new UserProfilePhotoResponse
             {
                 Id = p.Id,
                 PhotoUrl = p.PhotoUrl,
                 IsMain = p.IsMain,
                 Order = p.Order
             }).ToList() ?? new List<UserProfilePhotoResponse>(),
-            UserProfileAnswers = profile.UserProfileAnswers?.Select(a => new UserProfileAnswerResponse
+            UserProfileAnswers = profile.Answers?.Select(a => new UserProfileAnswerResponse
             {
                 Id = a.Id,
                 QuestionId = a.QuestionAnswer?.QuestionId ?? 0,
@@ -52,7 +52,7 @@ public static class UserProfileMapper
         };
     }
 
-    public static DiscoveryProfileResponse ToDiscoveryResponse(this UserProfile profile, Guid swiperId, IDiscoveryTokenService tokenService)
+    public static DiscoveryProfileResponse ToDiscoveryResponse(this Profile profile, Guid swiperId, IDiscoveryTokenService tokenService)
     {
         var response = profile.ToResponse(); // Start with base mapping
         

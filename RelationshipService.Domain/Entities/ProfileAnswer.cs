@@ -1,12 +1,12 @@
 namespace RelationshipService.Domain.Entities;
 
-public class UserProfileAnswer
+public class ProfileAnswer
 {
     public int Id { get; set; }
 
-    public long UserProfileId { get; set; }
+    public long ProfileId { get; set; }
 
-    public UserProfile UserProfile { get; set; }
+    public Profile Profile { get; set; }
 
     public int QuestionAnswerId { get; set; }
 

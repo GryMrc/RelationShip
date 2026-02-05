@@ -5,9 +5,9 @@ namespace RelationshipService.Domain.Entities;
 
 public class Swipe : Entity<int>
 {
-    public long SwiperProfilId { get; set; }
+    public long SwiperProfileId { get; set; }
 
-    public long SwipedProfilId { get; set; }
+    public long SwipedProfileId { get; set; }
 
     public SwipeType SwipeType { get; set; }
 

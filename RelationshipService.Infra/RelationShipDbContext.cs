@@ -8,17 +8,17 @@ namespace RelationshipService.Infra;
 
 public class RelationShipDbContext(DbContextOptions<RelationShipDbContext> options) : DbContext(options), IRelationShipDbContext
 {
-    public DbSet<UserProfile> UserProfiles { get; set; }
-    public DbSet<UserProfilePhoto> UserProfilePhotos { get; set; }
-    public DbSet<UserPreferences> UserPreferences { get; set; }
-    public DbSet<UserLocationHistory> UserLocationHistories { get; set; }
+    public DbSet<Profile> UserProfiles { get; set; }
+    public DbSet<ProfilePhoto> UserProfilePhotos { get; set; }
+    public DbSet<ProfilePreferences> UserPreferences { get; set; }
+    public DbSet<ProfileLocationHistory> UserLocationHistories { get; set; }
     public DbSet<Match> Matches { get; set; }
     public DbSet<Swipe> Swipes { get; set; }
     public DbSet<Hobby> Hobbies { get; set; }
     public DbSet<Question> Questions { get; set; }
     public DbSet<QuestionAnswer> QuestionAnswers { get; set; }
-    public DbSet<UserProfileAnswer> UserProfileAnswers { get; set; }
-    public DbSet<UserProfileHobby> UserProfileHobbies { get; set; }
+    public DbSet<ProfileAnswer> UserProfileAnswers { get; set; }
+    public DbSet<ProfileHobby> UserProfileHobbies { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

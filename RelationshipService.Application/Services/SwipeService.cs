@@ -142,10 +142,10 @@ public class SwipeService(
         // 1. Get IDs of users who liked me in this mode
         var likerIds = await context.Swipes
             .AsNoTracking()
-            .Where(s => s.SwipedProfilId == userProps.Id 
+            .Where(s => s.SwipedProfileId == userProps.Id 
                      && s.SwipeType != SwipeType.Dislike 
                      && s.Mode == userProps.Mode)
-            .Select(s => s.SwiperProfilId)
+            .Select(s => s.SwiperProfileId)
             .Distinct()
             .ToListAsync();
 
@@ -156,10 +156,10 @@ public class SwipeService(
         // If I also swiped them (Like or Dislike), I shouldn't see them in "Liked Me"
         var myInteractions = await context.Swipes
             .AsNoTracking()
-            .Where(s => s.SwiperProfilId == userProps.Id 
-                     && likerIds.Contains(s.SwipedProfilId) 
+            .Where(s => s.SwiperProfileId == userProps.Id 
+                     && likerIds.Contains(s.SwipedProfileId) 
                      && s.Mode == userProps.Mode)
-            .Select(s => s.SwipedProfilId)
+            .Select(s => s.SwipedProfileId)
             .ToListAsync();
 
         var pendingIds = likerIds.Except(myInteractions).ToList();
@@ -170,9 +170,9 @@ public class SwipeService(
         // 3. Load profiles
         var profiles = await context.UserProfiles
             .AsNoTracking()
-            .Include(p => p.ProfilePhotos)
+            .Include(p => p.Photos)
             .Include(p => p.Hobbies)
-            .Include(p => p.UserProfileAnswers)
+            .Include(p => p.Answers)
                 .ThenInclude(a => a.QuestionAnswer)
                     .ThenInclude(qa => qa.Question)
             .Include(p => p.Preferences)

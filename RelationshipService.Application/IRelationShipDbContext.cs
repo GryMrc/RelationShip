@@ -6,17 +6,17 @@ namespace RelationshipService.Application;
 
 public interface IRelationShipDbContext
 {
-    DbSet<UserProfile> UserProfiles { get; set; }
-    DbSet<UserProfilePhoto> UserProfilePhotos { get; set; }
-    DbSet<UserPreferences> UserPreferences { get; set; }
-    DbSet<UserLocationHistory> UserLocationHistories { get; set; }
+    DbSet<Profile> UserProfiles { get; set; }
+    DbSet<ProfilePhoto> UserProfilePhotos { get; set; }
+    DbSet<ProfilePreferences> UserPreferences { get; set; }
+    DbSet<ProfileLocationHistory> UserLocationHistories { get; set; }
     DbSet<Match> Matches { get; set; }
     DbSet<Swipe> Swipes { get; set; }
     DbSet<Hobby> Hobbies { get; set; }
     DbSet<Question> Questions { get; set; }
     DbSet<QuestionAnswer> QuestionAnswers { get; set; }
-    DbSet<UserProfileAnswer> UserProfileAnswers { get; set; }
-    DbSet<UserProfileHobby> UserProfileHobbies { get; set; }
+    DbSet<ProfileAnswer> UserProfileAnswers { get; set; }
+    DbSet<ProfileHobby> UserProfileHobbies { get; set; }
 
     ChangeTracker ChangeTracker { get;}
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

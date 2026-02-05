@@ -4,24 +4,24 @@ using RelationshipService.Domain.Entities;
 
 namespace RelationshipService.Infra.EntityTypeConfigurations;
 
-public class UserProfileAnswerConfiguration : IEntityTypeConfiguration<UserProfileAnswer>
+public class UserProfileAnswerConfiguration : IEntityTypeConfiguration<ProfileAnswer>
 {
-    public void Configure(EntityTypeBuilder<UserProfileAnswer> builder)
+    public void Configure(EntityTypeBuilder<ProfileAnswer> builder)
     {
-        builder.ToTable("user_profile_answers");
+        builder.ToTable("profile_answers");
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("id");
 
-        builder.Property(x => x.UserProfileId).HasColumnName("user_profile_id").IsRequired();
+        builder.Property(x => x.ProfileId).HasColumnName("profile_id").IsRequired();
         builder.Property(x => x.QuestionAnswerId).HasColumnName("question_answer_id").IsRequired();
 
-        builder.HasOne(x => x.UserProfile)
-            .WithMany(x => x.UserProfileAnswers)
-            .HasForeignKey(x => x.UserProfileId);
+        builder.HasOne(x => x.Profile)
+            .WithMany(x => x.Answers)
+            .HasForeignKey(x => x.ProfileId);
 
         builder.HasOne(x => x.QuestionAnswer)
-            .WithMany(x => x.UserProfileAnswers)
+            .WithMany(x => x.ProfileAnswers)
             .HasForeignKey(x => x.QuestionAnswerId);
     }
 }

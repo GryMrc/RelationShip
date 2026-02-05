@@ -26,12 +26,12 @@ public class SwipeConsumer(IRelationShipDbContext context, ILogger<SwipeConsumer
         // 1. Fetch relevant swipes (Own and Reciprocal) in one go
         var swipes = await context.Swipes
             .AsNoTracking()
-            .Where(s => ((s.SwiperProfilId == currentProfile.Id && s.SwipedProfilId == @event.SwipedProfilId) ||
-                         (s.SwiperProfilId == @event.SwipedProfilId && s.SwipedProfilId == currentProfile.Id)) &&
+            .Where(s => ((s.SwiperProfileId == currentProfile.Id && s.SwipedProfileId == @event.SwipedProfilId) ||
+                         (s.SwiperProfileId == @event.SwipedProfilId && s.SwipedProfileId == currentProfile.Id)) &&
                         s.Mode == @event.Mode)
             .ToListAsync();
 
-        var existingSwipe = swipes.FirstOrDefault(s => s.SwiperProfilId == currentProfile.Id);
+        var existingSwipe = swipes.FirstOrDefault(s => s.SwiperProfileId == currentProfile.Id);
         
         // Use Redis-discovered opposite swipe if available, otherwise fallback to DB result
         Swipe? oppositeSwipe = null;
@@ -40,15 +40,15 @@ public class SwipeConsumer(IRelationShipDbContext context, ILogger<SwipeConsumer
             // Create a dummy object to hold the swipe type discovered in Redis
             oppositeSwipe = new Swipe 
             {
-               SwipedProfilId = @event.SwipedProfilId, 
-               SwiperProfilId = currentProfile.Id, 
+               SwipedProfileId = @event.SwipedProfilId, 
+               SwiperProfileId = currentProfile.Id, 
                SwipeType = (SwipeType)@event.OppositeSwipeType.Value, 
                Mode = @event.Mode 
             };
         }
         else
         {
-            oppositeSwipe = swipes.FirstOrDefault(s => s.SwiperProfilId == @event.SwipedProfilId);
+            oppositeSwipe = swipes.FirstOrDefault(s => s.SwiperProfileId == @event.SwipedProfilId);
         }
         
         bool isNewSwipe = existingSwipe == null;
@@ -56,8 +56,8 @@ public class SwipeConsumer(IRelationShipDbContext context, ILogger<SwipeConsumer
         {
             context.Swipes.Add(new Swipe 
             {
-               SwipedProfilId = @event.SwipedProfilId, 
-               SwiperProfilId = currentProfile.Id, 
+               SwipedProfileId = @event.SwipedProfilId, 
+               SwiperProfileId = currentProfile.Id, 
                SwipeType = @event.SwipeType, 
                Mode = @event.Mode 
             });

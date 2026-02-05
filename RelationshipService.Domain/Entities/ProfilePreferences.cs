@@ -3,10 +3,10 @@ using RelationshipService.Domain.Enums;
 
 namespace RelationshipService.Domain.Entities;
 
-public class UserPreferences : Entity<int>
+public class ProfilePreferences : Entity<int>
 {
-    public long UserProfileId { get; set; }
-    public UserProfile UserProfile { get; set; }
+    public long ProfileId { get; set; }
+    public Profile Profile { get; set; }
     public Gender InterestedInGender { get; set; }
     public sbyte MaxDistancePreference { get; set; }
     public byte MinAgePreference { get; set; }

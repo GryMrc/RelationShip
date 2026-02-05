@@ -4,16 +4,16 @@ using RelationshipService.Domain.Entities;
 
 namespace RelationshipService.Infra.EntityTypeConfigurations;
 
-public class UserPreferencesConfiguration : IEntityTypeConfiguration<UserPreferences>
+public class UserPreferencesConfiguration : IEntityTypeConfiguration<ProfilePreferences>
 {
-    public void Configure(EntityTypeBuilder<UserPreferences> builder)
+    public void Configure(EntityTypeBuilder<ProfilePreferences> builder)
     {
-        builder.ToTable("user_preferences");
+        builder.ToTable("profile_preferences");
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("id");
 
-        builder.Property(x => x.UserProfileId).HasColumnName("user_profile_id").IsRequired();
+        builder.Property(x => x.ProfileId).HasColumnName("profile_id").IsRequired();
         builder.Property(x => x.InterestedInGender).HasColumnName("interested_in_gender").IsRequired();
         builder.Property(x => x.MaxDistancePreference).HasColumnName("max_distance_preference");
         builder.Property(x => x.MinAgePreference).HasColumnName("min_age_preference");
@@ -21,9 +21,9 @@ public class UserPreferencesConfiguration : IEntityTypeConfiguration<UserPrefere
 
 
 
-        builder.HasOne(x => x.UserProfile)
+        builder.HasOne(x => x.Profile)
             .WithOne(x => x.Preferences)
-            .HasForeignKey<UserPreferences>(x => x.UserProfileId)
+            .HasForeignKey<ProfilePreferences>(x => x.ProfileId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

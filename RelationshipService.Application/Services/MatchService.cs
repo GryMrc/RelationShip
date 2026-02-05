@@ -59,7 +59,7 @@ public class MatchService(IRelationShipDbContext context) : IMatchService
                     u.Name,
                     u.IsDeleted,
                     PhotoUrl = context.UserProfilePhotos
-                        .Where(p => p.UserProfileId == u.Id && p.IsMain)
+                        .Where(p => p.ProfileId == u.Id && p.IsMain)
                         .Select(p => p.PhotoUrl)
                         .FirstOrDefault()
                 })
@@ -95,7 +95,7 @@ public class MatchService(IRelationShipDbContext context) : IMatchService
             return;
 
         match.MatchStatus = MatchStatus.Deleted;
-        match.DeletedUserId = currentProfile.Id;
+        match.DeletedProfileId = currentProfile.Id;
         match.Reason = reason;
         
         await context.SaveChangesAsync();

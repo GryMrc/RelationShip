@@ -8,5 +8,5 @@ public class QuestionAnswer : Entity<int>
 
     public string AnswerText { get; set; }
 
-    public List<UserProfileAnswer> UserProfileAnswers { get; set; }
+    public List<ProfileAnswer> ProfileAnswers { get; set; }
 }

@@ -9,8 +9,8 @@ public class Match : Entity<int>
     public long ProfileBId { get; set; }
     public Mode Mode { get; set; }
     public MatchStatus MatchStatus { get; set; }
-    public long FreezedUserId { get; set; }
-    public long DeletedUserId { get; set; }
+    public long FreezedProfileId { get; set; }
+    public long DeletedProfileId { get; set; }
     public string? Reason { get; set; }
 }
 

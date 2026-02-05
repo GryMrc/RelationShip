@@ -20,8 +20,8 @@ public class UserProfileService(
             .AsNoTracking()
             .Include(x => x.Preferences)
             .Include(x => x.Hobbies)
-            .Include(x => x.ProfilePhotos)
-            .Include(x => x.UserProfileAnswers)
+            .Include(x => x.Photos)
+            .Include(x => x.Answers)
                 .ThenInclude(x => x.QuestionAnswer)
                     .ThenInclude(x => x.Question)
             .FirstOrDefaultAsync(x => x.UserId == userId);
@@ -35,8 +35,8 @@ public class UserProfileService(
             .AsNoTracking()
             .Include(x => x.Preferences)
             .Include(x => x.Hobbies)
-            .Include(x => x.ProfilePhotos)
-            .Include(x => x.UserProfileAnswers)
+            .Include(x => x.Photos)
+            .Include(x => x.Answers)
                 .ThenInclude(x => x.QuestionAnswer)
                     .ThenInclude(x => x.Question)
             .ToListAsync();
@@ -52,7 +52,7 @@ public class UserProfileService(
 
         if (user != null) throw new Exception("Profile already exists");
 
-        var profile = new UserProfile
+        var profile = new Profile
         {
             UserId = request.UserId,
             Name = request.Name,
@@ -109,8 +109,8 @@ public class UserProfileService(
             return new List<DiscoveryProfileResponse>();
 
         var swipedUserIds = await context.Swipes
-            .Where(s => s.SwiperProfilId == currentUser.Id)
-            .Select(s => s.SwipedProfilId)
+            .Where(s => s.SwiperProfileId == currentUser.Id)
+            .Select(s => s.SwipedProfileId)
             .ToListAsync();
 
         var today = DateTime.UtcNow;
@@ -121,9 +121,9 @@ public class UserProfileService(
         var profiles = await context.UserProfiles
             .AsNoTracking()
             .Include(x => x.Preferences)
-            .Include(x => x.ProfilePhotos)
+            .Include(x => x.Photos)
             .Include(x => x.Hobbies)
-            .Include(x => x.UserProfileAnswers)
+            .Include(x => x.Answers)
                 .ThenInclude(x => x.QuestionAnswer)
                     .ThenInclude(x => x.Question)
             .Where(p => p.UserId != userId && !p.IsDeleted)
@@ -165,16 +165,16 @@ public class UserProfileService(
     public async Task SyncAnswersAsync(Guid userId, SyncAnswersRequest request)
     {
         var profile = await context.UserProfiles
-            .Include(x => x.UserProfileAnswers)
+            .Include(x => x.Answers)
             .FirstOrDefaultAsync(x => x.UserId == userId);
 
         if (profile == null) throw new Exception("Profile not found");
 
-        context.UserProfileAnswers.RemoveRange(profile.UserProfileAnswers);
+        context.UserProfileAnswers.RemoveRange(profile.Answers);
 
-        profile.UserProfileAnswers = request.Answers.Select(a => new UserProfileAnswer
+        profile.Answers = request.Answers.Select(a => new ProfileAnswer
         {
-            UserProfileId = profile.Id,
+            ProfileId = profile.Id,
             QuestionAnswerId = a.QuestionAnswerId
         }).ToList();
 
@@ -186,9 +186,9 @@ public class UserProfileService(
         var profile = await context.UserProfiles.FirstOrDefaultAsync(x => x.UserId == userId);
         if (profile == null) throw new Exception("Profile not found");
 
-        var photo = new UserProfilePhoto
+        var photo = new ProfilePhoto
         {
-            UserProfileId = profile.Id,
+            ProfileId = profile.Id,
             PhotoUrl = request.PhotoUrl,
             IsMain = request.IsMain,
             Order = request.Order
@@ -201,7 +201,7 @@ public class UserProfileService(
     public async Task DeletePhotoAsync(Guid userId, int photoId)
     {
         var photo = await context.UserProfilePhotos
-            .FirstOrDefaultAsync(x => x.Id == photoId && x.UserProfile.UserId == userId);
+            .FirstOrDefaultAsync(x => x.Id == photoId && x.Profile.UserId == userId);
 
         if (photo == null) return;
 
@@ -212,7 +212,7 @@ public class UserProfileService(
     public async Task SetMainPhotoAsync(Guid userId, int photoId)
     {
         var photos = await context.UserProfilePhotos
-            .Where(x => x.UserProfile.UserId == userId)
+            .Where(x => x.Profile.UserId == userId)
             .ToListAsync();
 
         foreach (var p in photos)
@@ -233,9 +233,9 @@ public class UserProfileService(
 
         if (profile.Preferences == null)
         {
-            profile.Preferences = new UserPreferences
+            profile.Preferences = new ProfilePreferences
             {
-                UserProfileId = profile.Id,
+                ProfileId = profile.Id,
                 InterestedInGender = request.InterestedInGender,
                 MaxDistancePreference = request.MaxDistancePreference,
                 MinAgePreference = request.MinAgePreference,
