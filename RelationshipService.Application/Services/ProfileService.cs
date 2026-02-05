@@ -112,6 +112,8 @@ public class ProfileService(
             .Select(s => s.SwipedProfileId)
             .ToListAsync();
 
+        swipedUserIds.Add(currentUser.Id);
+
         var today = DateTime.UtcNow;
         var minBirthDate = today.AddYears(-currentUser.Preferences.MaxAgePreference);
         var maxBirthDate = today.AddYears(-currentUser.Preferences.MinAgePreference);
@@ -119,13 +121,11 @@ public class ProfileService(
 
         var profiles = await context.UserProfiles
             .AsNoTracking()
-            .Include(x => x.Preferences)
             .Include(x => x.Photos)
             .Include(x => x.Hobbies)
             .Include(x => x.Answers)
                 .ThenInclude(x => x.QuestionAnswer)
                     .ThenInclude(x => x.Question)
-            .Where(p => p.UserId != userId && !p.IsDeleted)
             .Where(p => !swipedUserIds.Contains(p.Id))
             .Where(p => p.Gender == currentUser.Preferences.InterestedInGender)
             .Where(p => p.Mode == currentUser.Mode) // Same world filter (Optimized: No JOIN)
