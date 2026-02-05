@@ -1,8 +1,8 @@
 using RelationshipService.Domain.Enums;
 
-namespace RelationshipService.Application.Models.UserProfile.Requests;
+namespace RelationshipService.Application.Models.Profile.Requests;
 
-public class CreateUserProfileRequest : UserProfileRequestBase
+public class CreateProfileRequest : ProfileRequestBase
 {
     public string Name { get; set; }
 

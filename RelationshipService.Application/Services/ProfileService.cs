@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using RelationshipService.Application.Models.UserProfile.Requests;
-using RelationshipService.Application.Models.UserProfile.Responses;
-using RelationshipService.Application.Models.UserPrefences.Requests;
+using RelationshipService.Application.Models.Profile.Requests;
+using RelationshipService.Application.Models.Profile.Responses;
 using RelationshipService.Application.ServiceContracts;
 using RelationshipService.Domain.Entities;
 using NetTopologySuite.Geometries;
@@ -9,12 +8,12 @@ using RelationshipService.Application.Mappers;
 
 namespace RelationshipService.Application.Services;
 
-public class UserProfileService(
+public class ProfileService(
     IRelationShipDbContext context, 
-    IDiscoveryTokenService tokenService) : IUserProfileService
+    IDiscoveryTokenService tokenService) : IProfileService
 {
 
-    public async Task<UserProfileResponse?> GetByUserIdAsync(Guid userId)
+    public async Task<ProfileResponse?> GetByUserIdAsync(Guid userId)
     {
         var profile = await context.UserProfiles
             .AsNoTracking()
@@ -29,7 +28,7 @@ public class UserProfileService(
         return profile?.ToResponse();
     }
 
-    public async Task<List<UserProfileResponse>> GetAllAsync()
+    public async Task<List<ProfileResponse>> GetAllAsync()
     {
         var profiles = await context.UserProfiles
             .AsNoTracking()
@@ -44,7 +43,7 @@ public class UserProfileService(
         return profiles.Select(p => p.ToResponse()).ToList();
     }
 
-    public async Task CreateAsync(CreateUserProfileRequest request)
+    public async Task CreateAsync(CreateProfileRequest request)
     {
         var user = await context.UserProfiles
             .AsNoTracking()
@@ -70,7 +69,7 @@ public class UserProfileService(
         await context.SaveChangesAsync();
     }
 
-    public async Task UpdateAsync(UpdateUserProfileRequest request)
+    public async Task UpdateAsync(UpdateProfileRequest request)
     {
         var profile = await context.UserProfiles
             .FirstOrDefaultAsync(x => x.UserId == request.UserId);
@@ -181,7 +180,7 @@ public class UserProfileService(
         await context.SaveChangesAsync();
     }
 
-    public async Task AddPhotoAsync(Guid userId, AddPhotoRequest request)
+    public async Task AddPhotoAsync(Guid userId, AddProfilePhotoRequest request)
     {
         var profile = await context.UserProfiles.FirstOrDefaultAsync(x => x.UserId == userId);
         if (profile == null) throw new Exception("Profile not found");
@@ -223,7 +222,7 @@ public class UserProfileService(
         await context.SaveChangesAsync();
     }
 
-    public async Task UpdatePreferencesAsync(UpdateUserPreferencesRequest request)
+    public async Task UpdatePreferencesAsync(UpdateProfilePreferencesRequest request)
     {
         var profile = await context.UserProfiles
             .Include(x => x.Preferences)

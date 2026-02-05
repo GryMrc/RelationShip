@@ -1,6 +1,6 @@
-namespace RelationshipService.Application.Models.UserProfile.Responses;
+namespace RelationshipService.Application.Models.Profile.Responses;
 
-public class UserProfilePhotoResponse
+public class ProfilePhotoResponse
 {
     public int Id { get; set; }
     public string PhotoUrl { get; set; }

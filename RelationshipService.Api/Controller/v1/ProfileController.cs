@@ -1,14 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
-using RelationshipService.Application.Models.UserProfile.Requests;
-using RelationshipService.Application.Models.UserPrefences.Requests;
+using RelationshipService.Application.Models.Profile.Requests;
 using RelationshipService.Application.ServiceContracts;
-using RelationshipService.Application.Models.UserProfile.Responses;
+using RelationshipService.Application.Models.Profile.Responses;
 
 namespace RelationshipService.Api.Controller.v1;
 
 [ApiVersion("1.0")]
-public class UserProfileController(IUserProfileService userProfileService) : BaseController
+public class ProfileController(IProfileService userProfileService) : BaseController
 {
     [HttpGet]
     public async Task<IActionResult> Get()
@@ -26,7 +25,7 @@ public class UserProfileController(IUserProfileService userProfileService) : Bas
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateUserProfileRequest request)
+    public async Task<IActionResult> Create(CreateProfileRequest request)
     {
         request.UserId = UserId;
         await userProfileService.CreateAsync(request);
@@ -34,7 +33,7 @@ public class UserProfileController(IUserProfileService userProfileService) : Bas
     }
 
     [HttpPut]
-    public async Task<IActionResult> Update(UpdateUserProfileRequest request)
+    public async Task<IActionResult> Update(UpdateProfileRequest request)
     {
         try
         {
@@ -77,7 +76,7 @@ public class UserProfileController(IUserProfileService userProfileService) : Bas
     }
 
     [HttpPost("photos")]
-    public async Task<IActionResult> AddPhoto(AddPhotoRequest request)
+    public async Task<IActionResult> AddPhoto(AddProfilePhotoRequest request)
     {
         await userProfileService.AddPhotoAsync(UserId, request);
         return Ok();
@@ -98,7 +97,7 @@ public class UserProfileController(IUserProfileService userProfileService) : Bas
     }
 
     [HttpPut("preferences")]
-    public async Task<IActionResult> UpdatePreferences(UpdateUserPreferencesRequest request)
+    public async Task<IActionResult> UpdatePreferences(UpdateProfilePreferencesRequest request)
     {
         request.UserId = UserId;
         await userProfileService.UpdatePreferencesAsync(request);

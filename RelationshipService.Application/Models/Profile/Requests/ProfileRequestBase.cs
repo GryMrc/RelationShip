@@ -1,9 +1,9 @@
 using System.Text.Json.Serialization;
 using RelationshipService.Domain.Enums;
 
-namespace RelationshipService.Application.Models.UserProfile.Requests;
+namespace RelationshipService.Application.Models.Profile.Requests;
 
-public abstract class UserProfileRequestBase
+public abstract class ProfileRequestBase
 {
     [JsonIgnore]
     public Guid UserId { get; set; }

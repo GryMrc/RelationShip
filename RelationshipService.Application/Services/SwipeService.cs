@@ -9,7 +9,7 @@ using RelationshipService.Domain.Enums;
 using StackExchange.Redis;
 using Microsoft.EntityFrameworkCore;
 using RelationshipService.Application.Mappers;
-using RelationshipService.Application.Models.UserProfile.Responses;
+using RelationshipService.Application.Models.Profile.Responses;
 using RelationshipService.Application.Models.Hobby.Responses;
 
 namespace RelationshipService.Application.Services;
@@ -127,7 +127,7 @@ public class SwipeService(
         };
     }
 
-    public async Task<List<UserProfileResponse>> GetLikersAsync(Guid userId)
+    public async Task<List<ProfileResponse>> GetLikersAsync(Guid userId)
     {
         // 0. Get User's current Mode and Plan
         var userProps = await context.UserProfiles
@@ -137,7 +137,7 @@ public class SwipeService(
             .FirstOrDefaultAsync()
             ?? throw new Exception("User Not Found");
 
-        if (userProps == null) return new List<UserProfileResponse>();
+        if (userProps == null) return new List<ProfileResponse>();
 
         // 1. Get IDs of users who liked me in this mode
         var likerIds = await context.Swipes
@@ -150,7 +150,7 @@ public class SwipeService(
             .ToListAsync();
 
         if (!likerIds.Any())
-            return new List<UserProfileResponse>();
+            return new List<ProfileResponse>();
 
         // 2. exclude matches (or any interaction from me to them)
         // If I also swiped them (Like or Dislike), I shouldn't see them in "Liked Me"
@@ -165,7 +165,7 @@ public class SwipeService(
         var pendingIds = likerIds.Except(myInteractions).ToList();
 
         if (!pendingIds.Any())
-            return new List<UserProfileResponse>();
+            return new List<ProfileResponse>();
 
         // 3. Load profiles
         var profiles = await context.UserProfiles
@@ -184,12 +184,12 @@ public class SwipeService(
         // Filter to show only main photo for all users
         foreach (var profile in response)
         {
-            if (profile.ProfilePhotos != null && profile.ProfilePhotos.Any())
+            if (profile.Photos != null && profile.Photos.Any())
             {
-                var mainPhoto = profile.ProfilePhotos.FirstOrDefault(p => p.IsMain);
-                profile.ProfilePhotos = mainPhoto != null 
-                    ? new List<UserProfilePhotoResponse> { mainPhoto }
-                    : new List<UserProfilePhotoResponse>();
+                var mainPhoto = profile.Photos.FirstOrDefault(p => p.IsMain);
+                profile.Photos = mainPhoto != null 
+                    ? new List<ProfilePhotoResponse> { mainPhoto }
+                    : new List<ProfilePhotoResponse>();
             }
         }
 
@@ -201,12 +201,12 @@ public class SwipeService(
                 profile.Name = "*****";
                 profile.Bio = "*****";
                 profile.Hobbies = new List<HobbyResponse>();
-                profile.UserProfileAnswers = new List<UserProfileAnswerResponse>();
+                profile.Answers = new List<ProfileAnswerResponse>();
                 
                 // Set blur flag for the main photo
-                if (profile.ProfilePhotos != null && profile.ProfilePhotos.Any())
+                if (profile.Photos != null && profile.Photos.Any())
                 {
-                    foreach (var photo in profile.ProfilePhotos)
+                    foreach (var photo in profile.Photos)
                     {
                         photo.IsBlurred = true;
                     }

@@ -1,8 +1,8 @@
 using RelationshipService.Domain.Enums;
 
-namespace RelationshipService.Application.Models.UserProfile.Responses;
+namespace RelationshipService.Application.Models.Profile.Responses;
 
-public class UserProfileResponse
+public class ProfileResponse
 {
     public long Id { get; set; }
     public string Name { get; set; }
@@ -21,6 +21,6 @@ public class UserProfileResponse
     public byte MinAgePreference { get; set; }
     public byte MaxAgePreference { get; set; }
     public List<Hobby.Responses.HobbyResponse> Hobbies { get; set; }
-    public List<UserProfilePhotoResponse> ProfilePhotos { get; set; }
-    public List<UserProfileAnswerResponse> UserProfileAnswers { get; set; }
+    public List<ProfilePhotoResponse> Photos { get; set; }
+    public List<ProfileAnswerResponse> Answers { get; set; }
 }

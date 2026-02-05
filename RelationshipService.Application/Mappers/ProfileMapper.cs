@@ -1,18 +1,16 @@
-using System.Security.Cryptography;
-using System.Text;
 using RelationshipService.Application.Models.Hobby.Responses;
-using RelationshipService.Application.Models.UserProfile.Responses;
+using RelationshipService.Application.Models.Profile.Responses;
 using RelationshipService.Application.ServiceContracts;
 using RelationshipService.Domain.Entities;
 using RelationshipService.Domain.Enums;
 
 namespace RelationshipService.Application.Mappers;
 
-public static class UserProfileMapper
+public static class ProfileMapper
 {
-    public static UserProfileResponse ToResponse(this Profile profile)
+    public static ProfileResponse ToResponse(this Profile profile)
     {
-        return new UserProfileResponse
+        return new ProfileResponse
         {
             Name = profile.Name,
             Bio = profile.Bio,
@@ -34,21 +32,21 @@ public static class UserProfileMapper
                 Id = h.Id,
                 Name = h.Name
             }).ToList() ?? new List<HobbyResponse>(),
-            ProfilePhotos = profile.Photos?.Select(p => new UserProfilePhotoResponse
+            Photos = profile.Photos?.Select(p => new ProfilePhotoResponse
             {
                 Id = p.Id,
                 PhotoUrl = p.PhotoUrl,
                 IsMain = p.IsMain,
                 Order = p.Order
-            }).ToList() ?? new List<UserProfilePhotoResponse>(),
-            UserProfileAnswers = profile.Answers?.Select(a => new UserProfileAnswerResponse
+            }).ToList() ?? new List<ProfilePhotoResponse>(),
+            Answers = profile.Answers?.Select(a => new ProfileAnswerResponse
             {
                 Id = a.Id,
                 QuestionId = a.QuestionAnswer?.QuestionId ?? 0,
                 QuestionText = a.QuestionAnswer?.Question?.Text ?? string.Empty,
                 AnswerId = a.QuestionAnswerId,
                 AnswerText = a.QuestionAnswer?.AnswerText ?? string.Empty
-            }).ToList() ?? new List<UserProfileAnswerResponse>()
+            }).ToList() ?? new List<ProfileAnswerResponse>()
         };
     }
 
@@ -75,8 +73,8 @@ public static class UserProfileMapper
             MinAgePreference = response.MinAgePreference,
             MaxAgePreference = response.MaxAgePreference,
             Hobbies = response.Hobbies,
-            ProfilePhotos = response.ProfilePhotos,
-            UserProfileAnswers = response.UserProfileAnswers,
+            Photos = response.Photos,
+            Answers = response.Answers,
             DiscoveryToken = tokenService.GenerateToken(swiperId, profile.Id, profile.Mode, profile.SubscriptionPlan)
         };
 

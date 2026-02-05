@@ -1,4 +1,4 @@
-namespace RelationshipService.Application.Models.UserProfile.Requests;
+namespace RelationshipService.Application.Models.Profile.Requests;
 
 public class UpsertAnswerRequest
 {

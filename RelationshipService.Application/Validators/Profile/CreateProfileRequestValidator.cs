@@ -1,11 +1,11 @@
 using FluentValidation;
-using RelationshipService.Application.Models.UserProfile.Requests;
+using RelationshipService.Application.Models.Profile.Requests;
 
-namespace RelationshipService.Application.Validators.UserProfile;
+namespace RelationshipService.Application.Validators.Profile;
 
-public class CreateUserProfileRequestValidator : AbstractValidator<CreateUserProfileRequest>
+public class CreateProfileRequestValidator : AbstractValidator<CreateProfileRequest>
 {
-    public CreateUserProfileRequestValidator()
+    public CreateProfileRequestValidator()
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Bio).MaximumLength(500);

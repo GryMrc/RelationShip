@@ -1,6 +1,6 @@
-namespace RelationshipService.Application.Models.UserProfile.Requests;
+namespace RelationshipService.Application.Models.Profile.Requests;
 
-public class AddPhotoRequest
+public class AddProfilePhotoRequest
 {
     public string PhotoUrl { get; set; }
     public bool IsMain { get; set; }

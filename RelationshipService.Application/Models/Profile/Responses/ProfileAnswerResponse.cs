@@ -1,6 +1,6 @@
-namespace RelationshipService.Application.Models.UserProfile.Responses;
+namespace RelationshipService.Application.Models.Profile.Responses;
 
-public class UserProfileAnswerResponse
+public class ProfileAnswerResponse
 {
     public int Id { get; set; }
     public int QuestionId { get; set; }
