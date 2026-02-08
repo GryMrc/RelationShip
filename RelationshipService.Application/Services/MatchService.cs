@@ -1,13 +1,15 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using RelationshipService.Application.Models.Common;
 using RelationshipService.Application.Models.Match.Requests;
 using RelationshipService.Application.Models.Match.Responses;
 using RelationshipService.Application.ServiceContracts;
 using RelationshipService.Domain.Enums;
+using RelationshipService.Domain.Models;
 
 namespace RelationshipService.Application.Services;
 
-public class MatchService(IRelationShipDbContext context) : IMatchService
+public class MatchService(IRelationShipDbContext context, IPublishEndpoint publishEndpoint) : IMatchService
 {
     public async Task<PaginatedResponse<MatchResponse>> GetMatchesAsync(Guid userId, GetMatchesRequest request)
     {
@@ -81,7 +83,34 @@ public class MatchService(IRelationShipDbContext context) : IMatchService
         return new PaginatedResponse<MatchResponse>(matchResponses, totalCount, request.PageIndex, request.PageSize);
     }
 
-    public async Task UnmatchAsync(Guid userId, int matchId, string reason)
+    public async Task<UserMatchState> GetUserMatchStateAsync(Guid userId)
+    {
+        var currentProfile = await context.UserProfiles
+            .AsNoTracking()
+            .Where(u => u.UserId == userId)
+            .Select(u => new { u.Id, u.Mode })
+            .FirstOrDefaultAsync() ?? throw new Exception("User not found");
+
+        var matches = await context.Matches
+            .AsNoTracking()
+            .Where(m => (m.ProfileAId == currentProfile.Id || m.ProfileBId == currentProfile.Id) &&
+                         m.Mode == currentProfile.Mode &&
+                         m.MatchStatus == MatchStatus.Active)
+            .Select(m => new MatchSyncItem
+            { 
+                MatchedProfileId = m.ProfileAId == currentProfile.Id ? m.ProfileBId : m.ProfileAId,
+                MatchId = m.Id 
+            })
+            .ToListAsync();
+
+        return new UserMatchState
+        {
+            ProfileId = currentProfile.Id,
+            Matches = matches
+        };
+    }
+
+    public async Task UnmatchAsync(Guid userId, long matchId, string reason)
     {
         var currentProfile = await context.UserProfiles.FirstOrDefaultAsync(x => x.UserId == userId)
             ?? throw new Exception("User not found");
@@ -94,10 +123,22 @@ public class MatchService(IRelationShipDbContext context) : IMatchService
         if (match.MatchStatus == MatchStatus.Deleted)
             return;
 
+        var otherProfileId = match.ProfileAId == currentProfile.Id ? match.ProfileBId : match.ProfileAId;
+
         match.MatchStatus = MatchStatus.Deleted;
         match.DeletedProfileId = currentProfile.Id;
         match.Reason = reason;
         
         await context.SaveChangesAsync();
+
+        // Publish event to notify WebSocket server
+        await publishEndpoint.Publish(new RelationshipService.Application.Events.RelationshipActionResultEvent
+        {
+            UserAId = currentProfile.Id,
+            UserBId = otherProfileId,
+            MatchId = matchId,
+            Type = RelationshipService.Application.Events.RelationshipNotificationType.Unmatch,
+            Mode = match.Mode
+        });
     }
 }

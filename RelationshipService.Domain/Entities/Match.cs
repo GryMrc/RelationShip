@@ -3,7 +3,7 @@ using RelationshipService.Domain.Enums;
 
 namespace RelationshipService.Domain.Entities;
 
-public class Match : Entity<int>
+public class Match : Entity<long>
 {
     public long ProfileAId { get; set; }
     public long ProfileBId { get; set; }
@@ -13,4 +13,3 @@ public class Match : Entity<int>
     public long DeletedProfileId { get; set; }
     public string? Reason { get; set; }
 }
-

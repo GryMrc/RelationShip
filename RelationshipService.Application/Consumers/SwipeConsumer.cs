@@ -131,6 +131,7 @@ public class SwipeConsumer(IRelationShipDbContext context, ILogger<SwipeConsumer
                 {
                     UserAId = @event.SwipedProfilId, // Target always gets notification
                     UserBId = @event.IsRedisMatch ? null : currentProfile.Id, // Swiper only gets notif if it was a DB-discovered match
+                    MatchId = match.Id,
                     Type = RelationshipNotificationType.NewMatch,
                     Mode = @event.Mode
                 };

@@ -98,6 +98,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<SwipeConsumer>();
+    x.AddConsumer<SaveMessageConsumer>();
 
     x.UsingRabbitMq((context, cfg) =>
     {
@@ -105,6 +106,11 @@ builder.Services.AddMassTransit(x =>
 
         // Enable Topic Exchange for refined routing
         cfg.Publish<SwipeEvent>(p => p.ExchangeType = "topic");
+
+        cfg.ReceiveEndpoint("save-message-queue", e =>
+        {
+            e.ConfigureConsumer<SaveMessageConsumer>(context);
+        });
 
         // 1. Isolated Queue for Date Mode
         cfg.ReceiveEndpoint("swipe-date-queue", e =>

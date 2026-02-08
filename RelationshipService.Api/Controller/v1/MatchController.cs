@@ -16,6 +16,13 @@ public class MatchController(IMatchService matchService) : BaseController
         return Ok(matches);
     }
 
+    [HttpGet("socket-init")]
+    public async Task<IActionResult> GetUserMatchState()
+    {
+        var state = await matchService.GetUserMatchStateAsync(UserId);
+        return Ok(state);
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Unmatch(int id, [FromBody] UnmatchRequest request)
     {

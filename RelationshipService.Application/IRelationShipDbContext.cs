@@ -17,6 +17,7 @@ public interface IRelationShipDbContext
     DbSet<QuestionAnswer> QuestionAnswers { get; set; }
     DbSet<ProfileAnswer> UserProfileAnswers { get; set; }
     DbSet<ProfileHobby> UserProfileHobbies { get; set; }
+    DbSet<Message> Messages { get; set; }
 
     ChangeTracker ChangeTracker { get;}
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);

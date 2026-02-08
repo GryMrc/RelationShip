@@ -19,6 +19,7 @@ public class RelationShipDbContext(DbContextOptions<RelationShipDbContext> optio
     public DbSet<QuestionAnswer> QuestionAnswers { get; set; }
     public DbSet<ProfileAnswer> UserProfileAnswers { get; set; }
     public DbSet<ProfileHobby> UserProfileHobbies { get; set; }
+    public DbSet<Message> Messages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
