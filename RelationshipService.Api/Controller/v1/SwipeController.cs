@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
 using RelationshipService.Application.Models.Swipe.Requests;
 using RelationshipService.Application.ServiceContracts;
+using Microsoft.AspNetCore.Authorization;
 
 namespace RelationshipService.Api.Controller.v1;
 
+[Authorize]
 [ApiVersion("1.0")]
 public class SwipeController(ISwipeService swipeService) : BaseController
 {

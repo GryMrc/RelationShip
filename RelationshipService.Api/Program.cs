@@ -9,6 +9,10 @@ using MassTransit;
 using RelationshipService.Application.Consumers;
 using RelationshipService.Application.Events;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Asp.Versioning;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,43 +20,54 @@ builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer((document, context, cancellationToken) =>
     {
-        // Add X-User-Id header parameter globally to all operations
         document.Components ??= new Microsoft.OpenApi.Models.OpenApiComponents();
-        document.Components.Parameters ??= new Dictionary<string, Microsoft.OpenApi.Models.OpenApiParameter>();
-        
-        document.Components.Parameters["X-User-Id"] = new Microsoft.OpenApi.Models.OpenApiParameter
+        document.Components.SecuritySchemes ??= new Dictionary<string, Microsoft.OpenApi.Models.OpenApiSecurityScheme>();
+
+        document.Components.SecuritySchemes["Bearer"] = new Microsoft.OpenApi.Models.OpenApiSecurityScheme
         {
-            Name = "X-User-Id",
-            In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-            Required = true,
-            Description = "User ID for authentication and authorization",
-            Schema = new Microsoft.OpenApi.Models.OpenApiSchema
-            {
-                Type = "integer",
-                Format = "int32"
-            }
+            Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            Description = "Enter your JWT token here."
         };
 
-        // Add the parameter to all operations
-        foreach (var path in document.Paths.Values)
+        document.SecurityRequirements ??= new List<Microsoft.OpenApi.Models.OpenApiSecurityRequirement>();
+        document.SecurityRequirements.Add(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
         {
-            foreach (var operation in path.Operations.Values)
+            [new Microsoft.OpenApi.Models.OpenApiSecurityScheme
             {
-                operation.Parameters ??= new List<Microsoft.OpenApi.Models.OpenApiParameter>();
-                operation.Parameters.Add(new Microsoft.OpenApi.Models.OpenApiParameter
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
                 {
-                    Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                    {
-                        Type = Microsoft.OpenApi.Models.ReferenceType.Parameter,
-                        Id = "X-User-Id"
-                    }
-                });
-            }
-        }
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            }] = Array.Empty<string>()
+        });
 
         return Task.CompletedTask;
     });
 });
+
+// JWT Authentication Configuration
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"] ?? "DefaultVeryLongSecretKeyForDevelopmentOnly123!"))
+    };
+});
+
 builder.Services.AddControllers();
 
 if (builder.Environment.IsDevelopment())
@@ -159,6 +174,8 @@ builder.Services.AddScoped<IQuestionService, QuestionService>();
 builder.Services.AddScoped<IDiscoveryTokenService, DiscoveryTokenService>();
 builder.Services.AddScoped<ISwipeService, SwipeService>();
 builder.Services.AddScoped<IMatchService, MatchService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
 
 var app = builder.Build();
 
@@ -171,6 +188,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();

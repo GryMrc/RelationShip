@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 
 namespace RelationshipService.Api.Controller;
@@ -10,11 +11,12 @@ public class BaseController : ControllerBase
     {
         get
         {
-            if (Request.Headers.TryGetValue("X-User-Id", out var userIdStr) && Guid.TryParse(userIdStr, out var userId))
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
             {
-                return userId;
+                throw new UnauthorizedAccessException("User is not authenticated or user id claim is missing.");
             }
-            return Guid.Empty;
+            return userId;
         }
     }
 }

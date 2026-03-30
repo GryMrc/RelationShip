@@ -1,11 +1,12 @@
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RelationshipService.Application.ServiceContracts;
-
 using RelationshipService.Application.Models.Match.Requests;
+using RelationshipService.Application.ServiceContracts;
 
 namespace RelationshipService.Api.Controller.v1;
 
+[Authorize]
 [ApiVersion("1.0")]
 public class MatchController(IMatchService matchService) : BaseController
 {

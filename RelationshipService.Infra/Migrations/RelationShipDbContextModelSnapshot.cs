@@ -202,10 +202,6 @@ namespace RelationshipService.Infra.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("is_liked");
 
-                    b.Property<int>("Mode")
-                        .HasColumnType("integer")
-                        .HasColumnName("mode");
-
                     b.Property<int>("SwipedUserId")
                         .HasColumnType("integer")
                         .HasColumnName("swiped_user_id");
@@ -359,11 +355,11 @@ namespace RelationshipService.Infra.Migrations
                         .HasColumnType("geometry(Point, 4326)")
                         .HasColumnName("location");
 
-                    b.Property<int>("Mode")
+                    b.Property<int>("MatchMode")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(1)
-                        .HasColumnName("mode");
+                        .HasColumnName("match_mode");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -410,7 +406,7 @@ namespace RelationshipService.Infra.Migrations
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Location"), "GIST");
 
-                    b.HasIndex("Mode", "Gender", "IsDeleted")
+                    b.HasIndex("MatchMode", "Gender", "IsDeleted")
                         .HasDatabaseName("IX_UserProfile_Discovery_BasicFilter");
 
                     b.ToTable("user_profiles", (string)null);

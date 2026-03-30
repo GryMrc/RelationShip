@@ -21,6 +21,7 @@ namespace RelationshipService.Domain.Entities
         public SubscriptionPlan SubscriptionPlan { get; set; } = SubscriptionPlan.Free;
 
         public ProfilePreferences Preferences { get; set; }
+        //public virtual User User { get; set; } = null!;
         public List<Hobby> Hobbies { get; set; }
         public List<ProfileAnswer> Answers { get; set; }
         public List<ProfilePhoto> Photos { get; set; }

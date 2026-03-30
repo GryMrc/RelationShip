@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using RelationshipService.Application;
 using RelationshipService.Domain.Base;
 using RelationshipService.Domain.Entities;
@@ -8,6 +8,8 @@ namespace RelationshipService.Infra;
 
 public class RelationShipDbContext(DbContextOptions<RelationShipDbContext> options) : DbContext(options), IRelationShipDbContext
 {
+    public DbSet<User> Users { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<Profile> UserProfiles { get; set; }
     public DbSet<ProfilePhoto> UserProfilePhotos { get; set; }
     public DbSet<ProfilePreferences> UserPreferences { get; set; }

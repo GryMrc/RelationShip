@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using RelationshipService.Domain.Entities;
 
@@ -6,6 +6,8 @@ namespace RelationshipService.Application;
 
 public interface IRelationShipDbContext
 {
+    DbSet<User> Users { get; set; }
+    DbSet<RefreshToken> RefreshTokens { get; set; }
     DbSet<Profile> UserProfiles { get; set; }
     DbSet<ProfilePhoto> UserProfilePhotos { get; set; }
     DbSet<ProfilePreferences> UserPreferences { get; set; }

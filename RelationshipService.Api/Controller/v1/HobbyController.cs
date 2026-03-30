@@ -3,9 +3,11 @@ using Asp.Versioning;
 using RelationshipService.Application.Models.Hobby.Requests;
 using RelationshipService.Application.Models.Hobby.Responses;
 using RelationshipService.Application.ServiceContracts;
+using Microsoft.AspNetCore.Authorization;
 
 namespace RelationshipService.Api.Controller.v1;
 
+[Authorize]
 [ApiVersion("1.0")]
 public class HobbyController(IHobbyService hobbyService) : BaseController
 {
@@ -24,6 +26,7 @@ public class HobbyController(IHobbyService hobbyService) : BaseController
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<ActionResult<HobbyResponse>> Create(CreateHobbyRequest request)
     {
@@ -31,6 +34,7 @@ public class HobbyController(IHobbyService hobbyService) : BaseController
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
     public async Task<ActionResult<HobbyResponse>> Update(int id, UpdateHobbyRequest request)
     {
@@ -42,6 +46,7 @@ public class HobbyController(IHobbyService hobbyService) : BaseController
         return Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {
