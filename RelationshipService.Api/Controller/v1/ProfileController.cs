@@ -105,4 +105,11 @@ public class ProfileController(IProfileService userProfileService) : BaseControl
         await userProfileService.UpdatePreferencesAsync(request);
         return NoContent();
     }
+
+    [HttpPut("devices")]
+    public async Task<IActionResult> SyncDevice(UpsertProfileDeviceRequest request)
+    {
+        await userProfileService.SyncDeviceAsync(UserId, request);
+        return Ok();
+    }
 }

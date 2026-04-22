@@ -252,6 +252,35 @@ public class ProfileService(
         profile.Mode = request.Mode;
         await context.SaveChangesAsync();
     }
+
+    public async Task SyncDeviceAsync(Guid userId, UpsertProfileDeviceRequest request)
+    {
+        var profile = await context.UserProfiles
+            .Include(x => x.Devices)
+            .FirstOrDefaultAsync(x => x.UserId == userId) 
+             ?? throw new Exception("Profile not found");
+
+        var deviceId = Guid.Parse(request.DeviceId);
+
+        var device = profile.Devices.FirstOrDefault(d => d.DeviceId == deviceId);
+
+        if (device == null)
+        {
+            context.UserProfileDevices.Add(new ProfileDevice
+            {
+                ProfileId = profile.Id,
+                DeviceId = deviceId,
+                Token = request.Token,
+                Platform = request.Platform,
+                Name = request.Name
+            });
+        }
+        else { 
+            device.Token = request.Token;
+        }
+
+        await context.SaveChangesAsync();
+    }
 }
 
 

@@ -17,4 +17,5 @@ public interface IProfileService
     Task DeletePhotoAsync(Guid userId, int photoId);
     Task SetMainPhotoAsync(Guid userId, int photoId);
     Task UpdatePreferencesAsync(UpdateProfilePreferencesRequest request);
+    Task SyncDeviceAsync(Guid userId, UpsertProfileDeviceRequest request);
 }

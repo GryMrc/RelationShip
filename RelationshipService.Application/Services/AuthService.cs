@@ -67,7 +67,7 @@ public class AuthService : IAuthService
                 Email = email,
                 Provider = request.Provider,
                 ProviderKey = providerKey,
-                Role = UserRole.User
+                Role = Roles.User
             };
             _context.Users.Add(user);
         }

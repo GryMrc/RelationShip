@@ -4,6 +4,7 @@ using RelationshipService.Application.Models.Hobby.Requests;
 using RelationshipService.Application.Models.Hobby.Responses;
 using RelationshipService.Application.ServiceContracts;
 using Microsoft.AspNetCore.Authorization;
+using RelationshipService.Domain.Enums;
 
 namespace RelationshipService.Api.Controller.v1;
 
@@ -26,7 +27,7 @@ public class HobbyController(IHobbyService hobbyService) : BaseController
         return Ok(result);
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = nameof(Roles.Admin))]
     [HttpPost]
     public async Task<ActionResult<HobbyResponse>> Create(CreateHobbyRequest request)
     {
@@ -34,7 +35,7 @@ public class HobbyController(IHobbyService hobbyService) : BaseController
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = nameof(Roles.Admin))]
     [HttpPut("{id}")]
     public async Task<ActionResult<HobbyResponse>> Update(int id, UpdateHobbyRequest request)
     {
@@ -46,7 +47,7 @@ public class HobbyController(IHobbyService hobbyService) : BaseController
         return Ok(result);
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = nameof(Roles.Admin))]
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {

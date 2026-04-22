@@ -23,7 +23,7 @@ namespace RelationshipService.Infra.EntityTypeConfigurations
             builder.Property(u => u.Role)
                 .IsRequired()
                 .HasMaxLength(50)
-                .HasDefaultValue(UserRole.User)
+                .HasDefaultValue(Roles.User)
                 .HasConversion<string>()
                 .HasColumnName("role");
 

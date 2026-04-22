@@ -1,9 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RelationshipService.Application.Models.Question.Requests;
 using RelationshipService.Application.Models.Question.Responses;
 using RelationshipService.Application.ServiceContracts;
-using Microsoft.AspNetCore.Authorization;
+using RelationshipService.Domain.Enums;
 
 namespace RelationshipService.Api.Controller.v1;
 
@@ -26,7 +27,7 @@ public class QuestionController(IQuestionService questionService) : BaseControll
         return Ok(result);
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = nameof(Roles.Admin))]
     [HttpPost]
     public async Task<ActionResult<QuestionResponse>> Create(CreateQuestionRequest request)
     {
@@ -34,7 +35,7 @@ public class QuestionController(IQuestionService questionService) : BaseControll
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = nameof(Roles.Admin))]
     [HttpPut("{id}")]
     public async Task<ActionResult<QuestionResponse>> Update(int id, UpdateQuestionRequest request)
     {
@@ -46,7 +47,7 @@ public class QuestionController(IQuestionService questionService) : BaseControll
         return Ok(result);
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = nameof(Roles.Admin))]
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {

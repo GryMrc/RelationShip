@@ -54,6 +54,11 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<Profile>
             .HasForeignKey(x => x.ProfileId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasMany(x => x.Devices)
+            .WithOne(x => x.Profile)
+            .HasForeignKey(x => x.ProfileId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasMany(x => x.Hobbies)
             .WithMany()
             .UsingEntity<ProfileHobby>(

@@ -25,5 +25,7 @@ namespace RelationshipService.Domain.Entities
         public List<Hobby> Hobbies { get; set; }
         public List<ProfileAnswer> Answers { get; set; }
         public List<ProfilePhoto> Photos { get; set; }
+
+        public List<ProfileDevice> Devices { get; set; }
     }
 }

@@ -8,7 +8,7 @@ namespace RelationshipService.Domain.Entities
         public string Email { get; set; } = null!;
         public string Provider { get; set; } = null!; // Google, Apple
         public string ProviderKey { get; set; } = null!; // Social Subject ID
-        public UserRole Role { get; set; } = UserRole.User;
+        public Roles Role { get; set; } = Roles.User;
         
         // Navigation property for Profile
         public virtual Profile? Profile { get; set; }
