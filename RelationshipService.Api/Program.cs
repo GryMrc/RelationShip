@@ -12,8 +12,8 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Asp.Versioning;
 using RelationshipService.Api.Filters;
+using RelationshipService.Api.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -70,6 +70,9 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddLocalization();
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 builder.Services.AddControllers(options =>
 {
@@ -205,6 +208,8 @@ var localizationOptions = new RequestLocalizationOptions()
     .AddSupportedUICultures(supportedCultures);
 
 app.UseRequestLocalization(localizationOptions);
+
+app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
 

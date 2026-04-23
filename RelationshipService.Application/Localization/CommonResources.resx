@@ -59,4 +59,7 @@
   <data name="Validation_Error" xml:space="preserve">
     <value>One or more validation errors occurred.</value>
   </data>
+  <data name="General_InternalServerError" xml:space="preserve">
+    <value>An unexpected error occurred on the server.</value>
+  </data>
 </root>

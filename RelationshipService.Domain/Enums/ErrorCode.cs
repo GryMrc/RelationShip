@@ -12,7 +12,8 @@ public enum ErrorCode
     Auth_AppleAuthNotImplemented,
     #endregion
 
-    #region Validation
+    #region General
+    General_InternalServerError,
     Validation_Error,
     #endregion
 }
