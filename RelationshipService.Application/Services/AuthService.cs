@@ -43,18 +43,18 @@ public class AuthService : IAuthService
             }
             catch (Exception ex)
             {
-                return Result<AuthResponse>.Failure(new Error("Invalid.Google.Token", "Invalid Google token"), HttpStatusCode.BadRequest);
+                return Result<AuthResponse>.Failure(new Error(ErrorCode.Auth_InvalidGoogleToken), HttpStatusCode.BadRequest);
             }
         }
         else if (request.Provider.Equals("Apple", StringComparison.OrdinalIgnoreCase))
         {
             // TODO: Implement Apple Token Verification
             // For now, returning failure until Apple certificates/ClientSecret are configured
-            return Result<AuthResponse>.Failure(new Error("Invalid.Apple.Token", "Apple authentication is not yet implemented."), HttpStatusCode.BadRequest);
+            return Result<AuthResponse>.Failure(new Error(ErrorCode.Auth_AppleAuthNotImplemented), HttpStatusCode.BadRequest);
         }
         else
         {
-            return Result<AuthResponse>.Failure(new Error("Unsupported.Provider", "Unsupported provider"), HttpStatusCode.BadRequest);
+            return Result<AuthResponse>.Failure(new Error(ErrorCode.Auth_UnsupportedProvider), HttpStatusCode.BadRequest);
         }
 
         var user = await _context.Users
@@ -109,7 +109,7 @@ public class AuthService : IAuthService
 
         if (refreshToken == null || !refreshToken.IsActive)
         {
-            return Result<AuthResponse>.Failure(new Error("Invalid.Refresh.Token", "Invalid refresh token"), HttpStatusCode.BadRequest);
+            return Result<AuthResponse>.Failure(new Error(ErrorCode.Auth_InvalidRefreshToken), HttpStatusCode.BadRequest);
         }
 
         // Rotate token: Revoke old, issue new
@@ -142,7 +142,7 @@ public class AuthService : IAuthService
     public async Task<IResult<bool>> RevokeToken(string token)
     {
         var refreshToken = await _context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == token);
-        if (refreshToken == null) return Result<bool>.Failure(new Error("Token.NotFound", "Token not found"), 404);
+        if (refreshToken == null) return Result<bool>.Failure(new Error(ErrorCode.Auth_TokenNotFound), HttpStatusCode.NotFound);
 
         refreshToken.IsRevoked = true;
         await _context.SaveChangesAsync();

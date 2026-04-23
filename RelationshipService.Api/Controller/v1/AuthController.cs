@@ -43,7 +43,6 @@ public class AuthController : BaseController
     public async Task<IActionResult> RevokeToken([FromBody] RefreshTokenRequest request)
     {
         var result = await _authService.RevokeToken(request.RefreshToken);
-        if (!result) return NotFound();
-        return Ok();
+        return Ok(result);
     }
 }

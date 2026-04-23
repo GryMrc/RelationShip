@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Asp.Versioning;
+using RelationshipService.Api.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,7 +69,17 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddControllers();
+builder.Services.AddLocalization();
+
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ResultLocalizationFilter>();
+})
+.AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+});
 
 if (builder.Environment.IsDevelopment())
 {
@@ -186,6 +197,14 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
     app.UseCors();
 }
+
+var supportedCultures = new[] { "en-US", "tr-TR" };
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture(supportedCultures[1]) // tr-TR
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+
+app.UseRequestLocalization(localizationOptions);
 
 app.UseHttpsRedirection();
 
