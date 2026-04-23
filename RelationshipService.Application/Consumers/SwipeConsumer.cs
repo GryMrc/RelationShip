@@ -16,7 +16,7 @@ public class SwipeConsumer(IRelationShipDbContext context, ILogger<SwipeConsumer
         bool isDbMatch = false;
         RelationshipActionResultEvent? pendingNotification = null;
 
-        var currentProfile = context.UserProfiles.FirstOrDefault(x => x.UserId == @event.SwiperId);
+        var currentProfile = await context.UserProfiles.FirstOrDefaultAsync(x => x.UserId == @event.SwiperId);
 
         if (currentProfile is null)
         {

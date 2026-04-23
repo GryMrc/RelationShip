@@ -190,6 +190,7 @@ builder.Services.AddScoped<ISwipeService, SwipeService>();
 builder.Services.AddScoped<IMatchService, MatchService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IPushNotificationService, FcmService>();
 
 var app = builder.Build();
 
