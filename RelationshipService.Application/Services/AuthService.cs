@@ -1,3 +1,4 @@
+using System.Net;
 using Google.Apis.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -5,6 +6,7 @@ using RelationshipService.Application.Models.Auth;
 using RelationshipService.Application.ServiceContracts;
 using RelationshipService.Domain.Entities;
 using RelationshipService.Domain.Enums;
+using RelationshipService.Domain.Models;
 
 namespace RelationshipService.Application.Services;
 
@@ -21,7 +23,7 @@ public class AuthService : IAuthService
         _configuration = configuration;
     }
 
-    public async Task<AuthResponse> LoginWithSocial(SocialLoginRequest request)
+    public async Task<IResult<AuthResponse>> LoginWithSocial(SocialLoginRequest request)
     {
         string email;
         string providerKey;
@@ -41,18 +43,18 @@ public class AuthService : IAuthService
             }
             catch (Exception ex)
             {
-                throw new UnauthorizedAccessException("Invalid Google token", ex);
+                return Result<AuthResponse>.Failure(new Error("Invalid.Google.Token", "Invalid Google token"), HttpStatusCode.BadRequest);
             }
         }
         else if (request.Provider.Equals("Apple", StringComparison.OrdinalIgnoreCase))
         {
             // TODO: Implement Apple Token Verification
-            // For now, throwing error until Apple certificates/ClientSecret are configured
-            throw new NotImplementedException("Apple authentication is not yet implemented.");
+            // For now, returning failure until Apple certificates/ClientSecret are configured
+            return Result<AuthResponse>.Failure(new Error("Invalid.Apple.Token", "Apple authentication is not yet implemented."), HttpStatusCode.BadRequest);
         }
         else
         {
-            throw new ArgumentException("Unsupported provider");
+            return Result<AuthResponse>.Failure(new Error("Unsupported.Provider", "Unsupported provider"), HttpStatusCode.BadRequest);
         }
 
         var user = await _context.Users
@@ -91,15 +93,15 @@ public class AuthService : IAuthService
         _context.RefreshTokens.Add(refreshToken);
         await _context.SaveChangesAsync();
 
-        return new AuthResponse
+        return Result<AuthResponse>.Success(new AuthResponse
         {
             AccessToken = accessToken,
             RefreshToken = refreshTokenValue,
             AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(double.Parse(_configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60"))
-        };
+        });
     }
 
-    public async Task<AuthResponse> Refresh(RefreshTokenRequest request)
+    public async Task<IResult<AuthResponse>> Refresh(RefreshTokenRequest request)
     {
         var refreshToken = await _context.RefreshTokens
             .Include(rt => rt.User)
@@ -107,7 +109,7 @@ public class AuthService : IAuthService
 
         if (refreshToken == null || !refreshToken.IsActive)
         {
-            throw new UnauthorizedAccessException("Invalid refresh token");
+            return Result<AuthResponse>.Failure(new Error("Invalid.Refresh.Token", "Invalid refresh token"), HttpStatusCode.BadRequest);
         }
 
         // Rotate token: Revoke old, issue new
@@ -129,21 +131,21 @@ public class AuthService : IAuthService
         _context.RefreshTokens.Add(newRefreshToken);
         await _context.SaveChangesAsync();
 
-        return new AuthResponse
+        return Result<AuthResponse>.Success(new AuthResponse
         {
             AccessToken = newAccessToken,
             RefreshToken = newRefreshTokenValue,
             AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(double.Parse(_configuration["Jwt:AccessTokenExpirationMinutes"] ?? "60"))
-        };
+        });
     }
 
-    public async Task<bool> RevokeToken(string token)
+    public async Task<IResult<bool>> RevokeToken(string token)
     {
         var refreshToken = await _context.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == token);
-        if (refreshToken == null) return false;
+        if (refreshToken == null) return Result<bool>.Failure(new Error("Token.NotFound", "Token not found"), 404);
 
         refreshToken.IsRevoked = true;
         await _context.SaveChangesAsync();
-        return true;
+        return Result<bool>.Success(true);
     }
 }

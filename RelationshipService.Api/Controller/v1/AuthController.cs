@@ -18,15 +18,7 @@ public class AuthController : BaseController
     [HttpPost("social-login")]
     public async Task<IActionResult> SocialLogin([FromBody] SocialLoginRequest request)
     {
-        try
-        {
-            var response = await _authService.LoginWithSocial(request);
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        return Ok(await _authService.LoginWithSocial(request));
     }
 
     [HttpPost("refresh-token")]
