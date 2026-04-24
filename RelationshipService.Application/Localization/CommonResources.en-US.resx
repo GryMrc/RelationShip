@@ -62,4 +62,13 @@
   <data name="General_InternalServerError" xml:space="preserve">
     <value>An unexpected error occurred on the server.</value>
   </data>
+  <data name="Auth_TokenRequired" xml:space="preserve">
+    <value>Token is required.</value>
+  </data>
+  <data name="Auth_ProviderRequired" xml:space="preserve">
+    <value>Provider is required.</value>
+  </data>
+  <data name="Auth_InvalidProvider" xml:space="preserve">
+    <value>Provider must be either 'Google' or 'Apple'.</value>
+  </data>
 </root>

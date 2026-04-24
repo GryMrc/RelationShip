@@ -10,6 +10,9 @@ public enum ErrorCode
     Auth_TokenNotFound,
     Auth_InvalidRefreshToken,
     Auth_AppleAuthNotImplemented,
+    Auth_TokenRequired,
+    Auth_ProviderRequired,
+    Auth_InvalidProvider,
     #endregion
 
     #region General

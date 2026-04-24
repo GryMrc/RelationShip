@@ -35,6 +35,18 @@ public class ResultLocalizationFilter : IAsyncResultFilter
                         result.Error = result.Error with { Description = localizedMessage };
                     }
                 }
+
+                if (result.Errors != null && result.Errors.Any())
+                {
+                    for (int i = 0; i < result.Errors.Count; i++)
+                    {
+                        var localized = _localizer[result.Errors[i]];
+                        if (!localized.ResourceNotFound)
+                        {
+                            result.Errors[i] = localized.Value;
+                        }
+                    }
+                }
             }
         }
 
