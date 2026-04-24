@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RelationshipService.Application;
 using RelationshipService.Application.ServiceContracts;
@@ -14,6 +15,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using RelationshipService.Api.Filters;
 using RelationshipService.Api.Middlewares;
+using FluentValidation.AspNetCore;
+using RelationshipService.Domain.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -98,6 +101,21 @@ if (builder.Environment.IsDevelopment())
 }
 
 builder.Services.AddValidatorsFromAssembly(System.Reflection.Assembly.Load("RelationshipService.Application"));
+builder.Services.AddFluentValidationAutoValidation();
+
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errors = context.ModelState.Values
+            .SelectMany(v => v.Errors)
+            .Select(e => e.ErrorMessage)
+            .ToList();
+
+        var result = Result.Failure(System.Net.HttpStatusCode.BadRequest, errors);
+        return new BadRequestObjectResult(result);
+    };
+});
 
 builder.Services.AddApiVersioning(options =>
 {

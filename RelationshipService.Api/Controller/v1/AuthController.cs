@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using RelationshipService.Application.Models.Auth;
 using RelationshipService.Application.ServiceContracts;
 using Asp.Versioning;
+using RelationshipService.Application.Models.Auth.Requests;
 
 namespace RelationshipService.Api.Controller.v1;
 

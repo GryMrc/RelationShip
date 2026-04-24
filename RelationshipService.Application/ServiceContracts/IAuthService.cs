@@ -1,4 +1,5 @@
-using RelationshipService.Application.Models.Auth;
+using RelationshipService.Application.Models.Auth.Requests;
+using RelationshipService.Application.Models.Auth.Responses;
 using RelationshipService.Domain.Models;
 
 namespace RelationshipService.Application.ServiceContracts;
